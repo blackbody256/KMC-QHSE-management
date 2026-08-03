@@ -210,7 +210,7 @@ export function NewVisitPage() {
       workRelated,
       sections: sectionValues,
       vitals,
-      clinician: "Dr. Miriam K.",
+      clinician: "Miriam K. · Health and Wellness Officer",
       signedAt: stateValue === "signed" ? new Date().toISOString() : undefined,
       createdAt: savedVisit?.createdAt ?? new Date().toISOString(),
     };
@@ -223,7 +223,7 @@ export function NewVisitPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Doctor-only area"
+        eyebrow="Health and Wellness Officer area"
         title={locked ? "Patient visit signed" : "Record patient visit"}
         description="Complete only the sections that are clinically relevant for this visit."
         action={
@@ -237,7 +237,7 @@ export function NewVisitPage() {
         <section className="success-banner">
           <LockKeyhole size={20} aria-hidden="true" />
           <div>
-            <strong>Signed by Dr. Miriam K.</strong>
+            <strong>Signed by Miriam K. · Health and Wellness Officer</strong>
             <span>
               This demonstration record is locked. “Add amendment” is intentionally deferred.
             </span>

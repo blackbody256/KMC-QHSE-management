@@ -25,7 +25,7 @@ export function PatientsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Doctor-only area"
+        eyebrow="Health and Wellness Officer area"
         title="Patients"
         description="Find an existing patient or register someone before recording a visit."
         action={
@@ -39,7 +39,7 @@ export function PatientsPage() {
         <Stethoscope size={20} aria-hidden="true" />
         <div>
           <strong>Clinical identity is restricted in the proposed design</strong>
-          <span>This screen is completely absent from the management preview.</span>
+          <span>This screen is completely absent from Manager and Director workflows.</span>
         </div>
       </section>
       <section className="panel">

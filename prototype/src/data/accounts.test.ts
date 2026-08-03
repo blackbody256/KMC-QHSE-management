@@ -1,18 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { authenticateDemoAccount } from "./accounts";
+import { authenticateDemoAccount, demoAccounts } from "./accounts";
 
 describe("demonstration login", () => {
-  it("signs in the doctor with the doctor role", () => {
-    expect(authenticateDemoAccount("doctor@kmc.demo", "Doctor#2026")?.role).toBe("doctor");
+  it("provides the three guided workflow accounts", () => {
+    expect(demoAccounts.map((account) => account.role)).toEqual([
+      "health-wellness-officer",
+      "manager",
+      "director",
+    ]);
+  });
+
+  it("signs in the Health and Wellness Officer", () => {
+    expect(authenticateDemoAccount("officer@kmc.demo", "Officer#2026")?.role).toBe(
+      "health-wellness-officer",
+    );
   });
 
   it("normalises email case and surrounding spaces", () => {
     expect(
       authenticateDemoAccount("  MANAGER@KMC.DEMO ", "Manager#2026")?.role,
-    ).toBe("management");
+    ).toBe("manager");
   });
 
   it("rejects an incorrect password", () => {
-    expect(authenticateDemoAccount("doctor@kmc.demo", "incorrect")).toBeNull();
+    expect(authenticateDemoAccount("officer@kmc.demo", "incorrect")).toBeNull();
   });
 });

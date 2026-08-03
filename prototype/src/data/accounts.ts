@@ -7,22 +7,31 @@ export interface DemoAccount extends DemoUser {
 
 export const demoAccounts: DemoAccount[] = [
   {
-    id: "demo-doctor",
-    name: "Dr. Miriam K.",
-    title: "Infirmary doctor",
-    identifier: "doctor@kmc.demo",
-    password: "Doctor#2026",
-    role: "doctor",
-    description: "Clinical records, patient history, visits, and operational registers.",
+    id: "demo-health-wellness-officer",
+    name: "Miriam K.",
+    title: "Health and Wellness Officer",
+    identifier: "officer@kmc.demo",
+    password: "Officer#2026",
+    role: "health-wellness-officer",
+    description: "Patient history, visits, operational registers, incidents and attestations.",
   },
   {
     id: "demo-manager",
     name: "Sarah N.",
-    title: "Health & Wellness Manager",
+    title: "QHSE Manager",
     identifier: "manager@kmc.demo",
     password: "Manager#2026",
-    role: "management",
-    description: "Aggregate dashboard and operational data without patient-level records.",
+    role: "manager",
+    description: "Read-only operational summaries and privacy-controlled unit drilldowns.",
+  },
+  {
+    id: "demo-director",
+    name: "David A.",
+    title: "QHSE Director",
+    identifier: "director@kmc.demo",
+    password: "Director#2026",
+    role: "director",
+    description: "Read-only company-level executive dashboard and trends.",
   },
 ];
 

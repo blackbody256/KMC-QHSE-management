@@ -21,7 +21,7 @@ export function PatientVisitsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Doctor-only area"
+        eyebrow="Health and Wellness Officer area"
         title={selectedPatient ? `${selectedPatient.fullName}'s visit history` : "Patient visits"}
         description={
           selectedPatient

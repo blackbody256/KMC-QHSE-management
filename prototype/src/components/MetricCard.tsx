@@ -45,6 +45,16 @@ export function MetricCard({ metric }: { metric: DashboardMetric }) {
         </div>
       )}
       <p className="metric-note">{metric.note}</p>
+      {metric.bands && metric.bands.length > 0 && (
+        <div className="severity-bands" aria-label="Injury severity bands">
+          {metric.bands.map((band) => (
+            <span key={band.label}>
+              <strong>{band.value}</strong> {band.label}
+            </span>
+          ))}
+        </div>
+      )}
+      {metric.directionNote && <p className="metric-direction">↗ {metric.directionNote}</p>}
       {metric.companion && (
         <div className="companion-row">
           <span>{metric.companion.label}</span>

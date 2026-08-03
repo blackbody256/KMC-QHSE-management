@@ -1,4 +1,5 @@
-export type DemoRole = "doctor" | "management";
+export type DemoRole = "health-wellness-officer" | "manager" | "director";
+
 export interface DemoUser {
   id: string;
   name: string;
@@ -6,6 +7,7 @@ export interface DemoUser {
   identifier: string;
   role: DemoRole;
 }
+
 export type PatientCategory = "Employee" | "Intern" | "Other";
 export type VisitType =
   | "Walk-in"
@@ -22,13 +24,17 @@ export type ComplianceStatus =
   | "within"
   | "approaching"
   | "outside"
-  | "no-data";
+  | "no-data"
+  | "provisional"
+  | "informational"
+  | "not-applicable";
 export type MetricProvenance =
   | "Derived"
   | "Manual"
   | "Register"
   | "Seeded"
-  | "Proposed";
+  | "Proposed"
+  | "Informational";
 export type ErgonomicOutcome =
   | "Compliant"
   | "Partially compliant"
@@ -89,6 +95,7 @@ export interface MonthlyReturn {
   headcount: number;
   surveillanceScheduled: number;
   surveillanceCompleted: number;
+  hoursWorked?: number;
   sourceNote: string;
   enteredBy: string;
   enteredAt: string;
@@ -99,6 +106,11 @@ export type EnvironmentalParameter =
   | "PM10"
   | "Noise · day"
   | "Noise · night";
+
+export type MonitoringContext =
+  | "occupational-exposure"
+  | "indoor-workplace"
+  | "ambient-environmental";
 
 export interface EnvironmentalReading {
   id: string;
@@ -112,7 +124,10 @@ export interface EnvironmentalReading {
   limit: number;
   unit: "µg/m³" | "dB(A)";
   averagingPeriod: string;
+  context: MonitoringContext;
   standardFamily: string;
+  standardVersion: string;
+  k4Eligible: boolean;
 }
 
 export interface CorrectiveAction {
@@ -136,13 +151,80 @@ export interface ErgonomicAssessment {
   action?: CorrectiveAction;
 }
 
-export interface LicenceRecord {
+export type SafetyClassification =
+  | "Occupational accident"
+  | "Occupational disease"
+  | "Dangerous occurrence"
+  | "Incident / near miss";
+
+export type SafetySeverity =
+  | "Fatality"
+  | "Lost-time injury"
+  | "Restricted work or job transfer"
+  | "Medical treatment"
+  | "First aid only"
+  | "No injury";
+
+export type Recordability = "Pending" | "Recordable" | "Not recordable";
+export type InvestigationStatus = "Not started" | "In progress" | "Completed";
+
+export interface SafetyIncident {
   id: string;
-  type: "Infirmary" | "Practitioner";
-  holder: string;
-  credential: string;
-  issueDate: string;
-  expiryDate: string;
+  caseNumber: string;
+  state: "draft" | "submitted";
+  period: string;
+  occurredAt: string;
+  reportedAt: string;
+  unit: string;
+  location: string;
+  workArea: string;
+  shift: "Day" | "Night" | "Not applicable";
+  activity: string;
+  description: string;
+  personCategory: "Employee" | "Contractor" | "Intern" | "Visitor" | "None";
+  affectedPersonRef?: string;
+  workRelated: "Yes" | "No" | "Pending";
+  classification: SafetyClassification;
+  severity: SafetySeverity;
+  potentialSeverity: SafetySeverity;
+  fatalityCount: number;
+  nonFatalInjuryCount: number;
+  daysAway: number;
+  restrictedDays: number;
+  recordability: Recordability;
+  recordabilityBasis: string;
+  determinedBy?: string;
+  determinedAt?: string;
+  investigationRequired: boolean;
+  investigationRequiredReason: string;
+  investigationStatus: InvestigationStatus;
+  investigationOwner?: string;
+  investigationDueAt?: string;
+  investigationCompletedAt?: string;
+  findings?: string;
+  rootCauses?: string;
+  correctiveActions: CorrectiveAction[];
+  clinicalEncounterIdRef?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface SafetyPeriodAttestation {
+  period: string;
+  state: "open" | "attested";
+  attestedBy?: string;
+  attestedAt?: string;
+  note?: string;
+}
+
+export interface ExpiryTrackedRecord {
+  id: string;
+  domain: "Environment" | "Quality" | "Industrial hygiene" | "Other";
+  recordType: string;
+  owner: string;
+  reference: string;
+  validFrom: string;
+  expiresOn: string;
   authority: string;
 }
 
@@ -154,14 +236,16 @@ export interface DemoPlan {
 }
 
 export interface DemoState {
-  version: 1;
+  version: 2;
   role: DemoRole;
   patients: Patient[];
   visits: PatientVisit[];
   monthlyReturns: MonthlyReturn[];
   environmentalReadings: EnvironmentalReading[];
   ergonomicAssessments: ErgonomicAssessment[];
-  licences: LicenceRecord[];
+  safetyIncidents: SafetyIncident[];
+  safetyAttestations: SafetyPeriodAttestation[];
+  expiryTrackedRecords: ExpiryTrackedRecord[];
   plans: DemoPlan[];
 }
 
@@ -180,4 +264,14 @@ export interface DashboardMetric {
     displayValue: string;
     status: ComplianceStatus;
   };
+  bands?: Array<{ label: string; value: number }>;
+  directionNote?: string;
+}
+
+export interface SafetyDashboardSnapshot {
+  period: string;
+  periodState: "open-empty" | "open-provisional" | "attested-empty" | "attested-final";
+  metrics: DashboardMetric[];
+  incidents: SafetyIncident[];
+  pendingDecisions: number;
 }

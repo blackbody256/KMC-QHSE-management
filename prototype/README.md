@@ -1,8 +1,8 @@
-# KMC Health and Wellness Management System Prototype
+# KMC QHSE Management System Prototype v0.3
 
-This is a stakeholder-review prototype for the proposed KMC Health and Wellness Management System (HWMS). It demonstrates the first-version workflows and dashboard agreed during requirements analysis.
+This stakeholder prototype demonstrates how Health and Wellness and Workplace Safety operational records produce an executive QHSE dashboard. It uses synthetic browser-local data only and is not suitable for real patient, employee, incident or compliance records.
 
-The prototype uses synthetic demonstration data only. It stores changes in the browser's local storage and is not suitable for real patient records or production use.
+The prototype is not the first increment of production. Its code, demo authentication, local-storage state and synthetic records will not migrate. The enduring outputs are confirmed decisions, the design language and reusable React components.
 
 ## Run locally
 
@@ -13,9 +13,9 @@ npm install
 npm run dev
 ```
 
-Open the local URL shown by Vite, normally `http://localhost:5173`.
+Open the Vite URL, normally `http://localhost:5173`.
 
-To verify and preview a production build:
+Verification:
 
 ```bash
 npm test
@@ -23,29 +23,42 @@ npm run build
 npm run preview
 ```
 
-## Suggested stakeholder walkthrough
+## Demonstration accounts
 
-1. On the login screen, select the **Health & Wellness Manager** demonstration account and sign in.
-2. Review the seven primary KPIs, data provenance, formula labels, alerts, and trend charts.
-3. Open **Monthly returns** and enter a reporting month to see dashboard metrics recalculate.
-4. Record an **Environment** reading and review its comparison with the illustrative threshold.
-5. Record an **Ergonomic assessment** using the three confirmed outcomes.
-6. Open **Medical certifications** and explain that it is a proposed expiry reminder for facility authorisation and clinician professional registration—not employee driving licences.
-7. Sign out, select the **Infirmary doctor** demonstration account, and sign in.
-8. Register a patient, continue into a visit, and use the visible radio buttons and checkboxes for quick entry.
-9. Open a previous visit from the patient history, review its full details, and start a follow-up.
-10. Save a draft or sign the new visit, then use **Reset demo data** when finished.
+| Role | Email | Password | Workflow |
+|---|---|---|---|
+| Health and Wellness Officer | `officer@kmc.demo` | `Officer#2026` | Clinical history and operational entry |
+| QHSE Manager | `manager@kmc.demo` | `Manager#2026` | Read-only unit summaries and suppressed drilldowns |
+| QHSE Director | `director@kmc.demo` | `Director#2026` | Read-only executive dashboard and trends |
 
-## Important prototype constraints
+There is no unauthenticated dashboard and no role-switch dropdown. The login is a workflow simulation, not production security.
 
-- All names, records, results, and medical certification entries are synthetic.
-- Browser data is stored under `kmc-hwms-demo-v1`.
-- The demonstration login is a workflow simulation. Production authentication, server storage, audit logging, encryption, backups, integrations, and privacy controls are not implemented.
-- Environmental limits and KPI formulas marked **Proposed** require stakeholder approval before production use.
-- A signed visit is locked in the interface; the production append-only amendment workflow is intentionally deferred and identified in the specification.
+## Suggested walkthrough
 
-## Requirements and review documents
+1. Sign in as Director. Review the five Health and Wellness KPIs and five safety indicators for July 2026.
+2. Select August 2026 and show that an open, empty safety register displays **No data**, not zero.
+3. Sign in as Manager. Open Workplace Safety and show that exact dates, shifts, locations and event rows are absent; small units are suppressed.
+4. Review Monthly Returns in read-only mode and note that hours worked is not supplied and feeds no rate.
+5. Sign in as Health and Wellness Officer. Open a patient’s complete past-visit history.
+6. Record an incident using radio-button choices, a manual recordability determination and an explicit investigation-required decision.
+7. Review the safety/clinical boundary: the safety module receives only “Treated by Health and Wellness: Yes/No.”
+8. Compare Industrial Hygiene and Environment views over the same monitoring register. Context fixes the standard family and only eligible occupational readings feed K4.
+9. Open the Workplace Safety, Environment and Quality research cards and confirm they show no figures, charts or data-entry controls.
+10. Use **Reset demo** to restore July attested and August open/empty seed data.
 
-- [Corrected SRS](../docs/KMC_HWMS_SRS_v1.1_DRAFT.md)
-- [Prototype specification](../docs/KMC_HWMS_Prototype_Spec_v0.2.md)
-- [Stakeholder review and decision register](../docs/KMC_HWMS_Stakeholder_Review_v0.2.md)
+## Important constraints
+
+- Browser data is stored under `kmc-qhse-demo-v2`.
+- All operational and clinical records are fictional.
+- Medical certification tracking and KPIs K6/K7 were withdrawn through the recorded stakeholder decision. The generic expiry pattern remains for future permits, consents and calibration.
+- The minimum disclosure cell size of five is proposed pending Data Protection Officer approval.
+- Environmental limits and KPI formulas labelled Proposed require accountable-owner approval.
+- A signed visit is locked in the interface; production append-only amendment remains deferred.
+- Production requires Keycloak, Go services, Postgres, server-side authorization, audit, encryption, backup and KMC infrastructure.
+
+## Governing documents
+
+- [QHSE SRS v2.0](../docs/KMC_QHSE_MS_SRS_v2.0.md)
+- [Prototype specification v0.3](../docs/KMC_QHSE_Prototype_Spec_v0.3.md)
+- [Stakeholder decision register v0.3](../docs/KMC_QHSE_Stakeholder_Decision_Register_v0.3.md)
+- [Production build plan v1.2](../docs/KMC_HWMS_Production_Build_Plan_v1.2.md)

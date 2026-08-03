@@ -62,7 +62,7 @@ export function NewPatientPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Doctor-only area"
+        eyebrow="Health and Wellness Officer area"
         title="Register patient"
         description="Only the minimum identity and organisational information needed for this demonstration."
         action={
@@ -79,7 +79,7 @@ export function NewPatientPage() {
               <span className="section-number">1</span>
               <div>
                 <h2>Biodata</h2>
-                <p>Fields follow the supplied KVP Infirmary form.</p>
+                <p>Fields follow the supplied medical form.</p>
               </div>
             </div>
             <span className="required-note">* Required</span>

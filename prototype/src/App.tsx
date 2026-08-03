@@ -9,10 +9,14 @@ import { NewVisitPage } from "./pages/NewVisitPage";
 import { MonthlyReturnsPage } from "./pages/MonthlyReturnsPage";
 import { EnvironmentPage } from "./pages/EnvironmentPage";
 import { ErgonomicsPage } from "./pages/ErgonomicsPage";
-import { LicencesPage } from "./pages/LicencesPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LoginPage } from "./pages/LoginPage";
 import { VisitDetailPage } from "./pages/VisitDetailPage";
+import { WorkplaceSafetyPage } from "./pages/WorkplaceSafetyPage";
+import { NewSafetyIncidentPage } from "./pages/NewSafetyIncidentPage";
+import { QualityResearchPage } from "./pages/QualityResearchPage";
+import { AccessDeniedPage } from "./pages/AccessDeniedPage";
+import { roleCanAccessPath } from "./lib/access";
 
 export default function App() {
   const { state, currentUser } = useDemoStore();
@@ -22,11 +26,12 @@ export default function App() {
     return <LoginPage />;
   }
 
-  const clinicalPath = path.startsWith("/patients") || path.startsWith("/patient-visits");
-  const effectivePath = state.role === "management" && clinicalPath ? "/" : path;
+  const allowed = roleCanAccessPath(state.role, path);
 
   let page: React.ReactNode;
-  switch (effectivePath) {
+  if (!allowed) {
+    page = <AccessDeniedPage />;
+  } else switch (path) {
     case "/":
       page = <DashboardPage />;
       break;
@@ -48,14 +53,26 @@ export default function App() {
     case "/monthly-returns":
       page = <MonthlyReturnsPage />;
       break;
-    case "/environment":
-      page = <EnvironmentPage />;
+    case "/industrial-hygiene":
+      page = <EnvironmentPage mode="industrial" />;
       break;
-    case "/ergonomics":
+    case "/ergonomics-wellness":
       page = <ErgonomicsPage />;
       break;
-    case "/licences":
-      page = <LicencesPage />;
+    case "/workplace-safety":
+      page = <WorkplaceSafetyPage />;
+      break;
+    case "/workplace-safety/incidents/new":
+      page = <NewSafetyIncidentPage />;
+      break;
+    case "/environment-sustainability":
+      page = <EnvironmentPage mode="environment" />;
+      break;
+    case "/quality-inspection-testing":
+      page = <QualityResearchPage />;
+      break;
+    case "/access-denied":
+      page = <AccessDeniedPage />;
       break;
     default:
       page = <NotFoundPage />;

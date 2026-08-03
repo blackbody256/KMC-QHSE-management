@@ -1,11 +1,12 @@
 import {
   ArrowRight,
   BarChart3,
+  BriefcaseMedical,
   Eye,
   EyeOff,
   LockKeyhole,
   ShieldCheck,
-  Stethoscope,
+  Building2,
   UserRound,
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
@@ -37,7 +38,7 @@ export function LoginPage() {
       <section className="login-introduction">
         <div className="login-brand" aria-label="Kiira Motors Corporation">
           <div className="brand-logo-image" aria-hidden="true" />
-          <span>Health & Wellness Management System</span>
+          <span>QHSE Management System</span>
         </div>
         <div className="login-copy">
           <span className="login-kicker">Stakeholder workflow prototype</span>
@@ -51,7 +52,7 @@ export function LoginPage() {
           <ShieldCheck size={22} aria-hidden="true" />
           <div>
             <strong>Patient privacy is demonstrated by role</strong>
-            <span>Management accounts cannot open patient names, visits, or clinical notes.</span>
+            <span>Viewer accounts cannot open patient names, visits, clinical notes, or incident rows.</span>
           </div>
         </div>
       </section>
@@ -76,8 +77,10 @@ export function LoginPage() {
               onClick={() => selectAccount(index)}
             >
               <span className="demo-account-icon">
-                {account.role === "doctor" ? (
-                  <Stethoscope size={19} aria-hidden="true" />
+                {account.role === "health-wellness-officer" ? (
+                  <BriefcaseMedical size={19} aria-hidden="true" />
+                ) : account.role === "director" ? (
+                  <Building2 size={19} aria-hidden="true" />
                 ) : (
                   <BarChart3 size={19} aria-hidden="true" />
                 )}
@@ -134,7 +137,7 @@ export function LoginPage() {
             </div>
           </label>
           <button className="button button-primary login-submit" type="submit">
-            Sign in to HWMS
+            Sign in to QHSE
             <ArrowRight size={17} aria-hidden="true" />
           </button>
         </form>

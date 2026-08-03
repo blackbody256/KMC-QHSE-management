@@ -17,6 +17,7 @@ const outcomeStatus: Record<ErgonomicOutcome, "within" | "approaching" | "outsid
 
 export function ErgonomicsPage() {
   const { state, addErgonomicAssessment } = useDemoStore();
+  const isOfficer = state.role === "health-wellness-officer";
   const [workstation, setWorkstation] = useState("Office workstation B4");
   const [workType, setWorkType] = useState<"Office" | "Industrial">("Office");
   const [outcome, setOutcome] = useState<ErgonomicOutcome>("Compliant");
@@ -64,7 +65,7 @@ export function ErgonomicsPage() {
       assessedAt,
       workstation,
       workType,
-      assessor: "OHS Officer · preview",
+      assessor: "Health and Wellness Officer · preview",
       outcome,
       findings: findings.trim(),
       action,
@@ -79,15 +80,15 @@ export function ErgonomicsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Workstation risk"
+        eyebrow="Health and Wellness · Ergonomics and Wellness"
         title="Ergonomic assessments"
         description="Capture confirmed outcome states now; defer detailed criteria until the Division standardises its tool."
-        action={
+        action={isOfficer ? (
           <button className="button button-primary" type="button" onClick={() => document.getElementById("new-assessment")?.scrollIntoView()}>
             <Plus size={17} aria-hidden="true" />
             New assessment
           </button>
-        }
+        ) : undefined}
       />
       <section className="provenance-callout">
         <Armchair size={21} aria-hidden="true" />
@@ -100,7 +101,7 @@ export function ErgonomicsPage() {
         </div>
       </section>
 
-      <div className="entry-layout" id="new-assessment">
+      {isOfficer && <div className="entry-layout" id="new-assessment">
         <form className="panel form-panel" onSubmit={submit}>
           <div className="form-section-heading">
             <div>
@@ -121,16 +122,17 @@ export function ErgonomicsPage() {
                 onChange={(event) => setWorkstation(event.target.value)}
               />
             </label>
-            <label className="field">
-              <span>Assessment type</span>
-              <select
-                value={workType}
-                onChange={(event) => setWorkType(event.target.value as "Office" | "Industrial")}
-              >
-                <option>Office</option>
-                <option>Industrial</option>
-              </select>
-            </label>
+            <fieldset className="choice-fieldset field-span-2">
+              <legend>Assessment type</legend>
+              <div className="radio-card-grid compact-choice-grid">
+                {(["Office", "Industrial"] as const).map((item) => (
+                  <label className="radio-card" key={item}>
+                    <input type="radio" name="work-type" checked={workType === item} onChange={() => setWorkType(item)} />
+                    <span>{item}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <label className="field">
               <span>Date and time</span>
               <input
@@ -141,7 +143,7 @@ export function ErgonomicsPage() {
             </label>
             <label className="field">
               <span>Assessor</span>
-              <input value="OHS Officer · preview" readOnly className="derived-input" />
+              <input value="Health and Wellness Officer · preview" readOnly className="derived-input" />
             </label>
           </div>
 
@@ -231,7 +233,7 @@ export function ErgonomicsPage() {
             authority are defined.
           </p>
         </aside>
-      </div>
+      </div>}
 
       <section className="panel section-spacing">
         <div className="panel-heading">

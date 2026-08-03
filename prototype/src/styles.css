@@ -734,8 +734,7 @@ h3 {
 }
 
 .panel,
-.metric-card,
-.licence-card {
+.metric-card {
   background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 4px;
@@ -944,6 +943,22 @@ h3 {
 .section-not-indicated {
   color: var(--neutral);
   background: var(--neutral-wash);
+}
+
+.status-provisional {
+  color: var(--caution);
+  background: var(--caution-wash);
+}
+
+.status-informational {
+  color: var(--blue);
+  background: var(--blue-wash);
+}
+
+.status-not-applicable {
+  color: var(--neutral);
+  background: var(--neutral-wash);
+  border: 1px dashed var(--rule-strong);
 }
 
 .circle-progress {
@@ -1413,7 +1428,6 @@ tbody tr:hover {
 .data-cell,
 .metric-value,
 .calculation-card strong,
-.licence-card dd,
 .visit-completeness strong {
   font-family: "IBM Plex Mono", monospace;
   font-variant-numeric: tabular-nums;
@@ -2485,107 +2499,297 @@ tbody tr:hover {
   border-radius: 3px;
 }
 
-.licence-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+.dashboard-section {
+  margin-top: 30px;
 }
 
-.licence-card {
-  padding: 18px;
+.safety-metric-grid {
+  grid-template-columns: repeat(5, minmax(210px, 1fr));
 }
 
-.licence-icon {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  margin-bottom: 14px;
-  place-items: center;
-  color: var(--blue);
-  background: var(--blue-wash);
+.compact-metrics .metric-card {
+  min-height: 270px;
+}
+
+.decision-callout,
+.attestation-explainer,
+.clinical-boundary-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 13px 15px;
+  color: #744b0d;
+  background: var(--caution-wash);
+  border: 1px solid #ead4aa;
   border-radius: 4px;
 }
 
-.licence-type {
-  margin-bottom: 4px;
-  color: var(--brand-deep);
-  font-size: 0.67rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.attestation-explainer,
+.clinical-boundary-note {
+  color: #27557c;
+  background: var(--blue-wash);
+  border-color: #c9def0;
 }
 
-.licence-card h2 {
-  font-size: 1rem;
+.decision-callout > div,
+.attestation-explainer > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.licence-card > p {
-  margin: 5px 0 15px;
+.decision-callout strong,
+.attestation-explainer strong {
+  font-size: 0.8rem;
+}
+
+.decision-callout span,
+.attestation-explainer span,
+.clinical-boundary-note span {
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.severity-bands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 15px 10px;
+}
+
+.severity-bands span {
+  padding: 5px 7px;
   color: var(--ink-muted);
+  background: var(--neutral-wash);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 0.64rem;
+}
+
+.severity-bands strong {
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.metric-direction {
+  margin: 0 15px 10px;
+  color: var(--blue);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.text-link {
+  color: var(--blue);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.attestation-panel,
+.table-panel,
+.research-section {
+  margin-top: 22px;
+}
+
+.attestation-result,
+.attestation-form {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.attestation-result {
+  color: var(--ok);
+  padding: 10px 12px;
+  background: var(--ok-wash);
+  border: 1px solid #b8ded5;
+  border-radius: 4px;
+}
+
+.attestation-result > div,
+.attestation-form > div:first-child {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.attestation-result span,
+.attestation-form span {
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+}
+
+.attestation-form .field {
+  min-width: min(380px, 100%);
+}
+
+.privacy-callout {
+  margin-top: 0;
+}
+
+.choice-fieldset {
+  min-width: 0;
+  margin: 16px 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-fieldset legend {
+  margin-bottom: 8px;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.radio-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.compact-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.radio-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  cursor: pointer;
   font-size: 0.72rem;
 }
 
-.licence-card dl {
-  margin: 0;
+.radio-card:has(input:checked) {
+  color: var(--blue);
+  background: var(--blue-wash);
+  border-color: #8cb9dc;
 }
 
-.licence-card dl > div {
-  display: grid;
-  grid-template-columns: 115px minmax(0, 1fr);
-  gap: 8px;
-  padding: 8px 0;
+.radio-card input {
+  accent-color: var(--blue);
+}
+
+.form-section + .form-section {
+  margin-top: 26px;
+  padding-top: 22px;
   border-top: 1px solid var(--rule);
-  font-size: 0.67rem;
 }
 
-.licence-card dt {
+.safety-form {
+  max-width: 1160px;
+}
+
+.inline-entry-panel,
+.page-message {
+  margin-bottom: 18px;
+}
+
+.proposal-badge {
+  display: inline-flex;
+  padding: 5px 8px;
+  color: #744b0d;
+  background: var(--caution-wash);
+  border: 1px solid #ead4aa;
+  border-radius: 3px;
+  font-size: 0.64rem;
+  font-weight: 600;
+}
+
+.research-introduction,
+.research-footnote {
   color: var(--ink-muted);
+  font-size: 0.76rem;
+  line-height: 1.55;
 }
 
-.licence-card dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.licence-footer {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule);
-}
-
-.renewal-steps {
+.research-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.renewal-steps > div {
-  display: flex;
-  min-height: 88px;
-  flex-direction: column;
+.research-card {
   padding: 16px;
-  border-right: 1px solid var(--rule);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--caution);
+  border-radius: 4px;
 }
 
-.renewal-steps > div:last-child {
-  border-right: 0;
+.research-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
 }
 
-.renewal-steps strong {
-  font-family: "IBM Plex Mono", monospace;
-  color: var(--brand-deep);
-  font-size: 1rem;
-}
-
-.renewal-steps span {
-  margin-top: 6px;
+.research-card > p {
+  margin: 10px 0;
   color: var(--ink-muted);
   font-size: 0.7rem;
-  line-height: 1.4;
+  line-height: 1.5;
+}
+
+.research-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 9px;
+  color: #27557c;
+  background: var(--blue-wash);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.research-question svg {
+  flex: 0 0 auto;
+}
+
+.research-card small {
+  color: var(--ink-faint);
+  font-size: 0.62rem;
+}
+
+.access-denied {
+  max-width: 620px;
+  margin: 80px auto;
+  padding: 44px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 4px solid var(--breach);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.access-denied svg {
+  color: var(--breach);
+}
+
+.access-denied p {
+  color: var(--ink-muted);
+  line-height: 1.6;
 }
 
 @media (max-width: 1280px) {
   .metric-grid {
     grid-template-columns: repeat(3, minmax(220px, 1fr));
+  }
+
+  .safety-metric-grid,
+  .research-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 
   .summary-strip {
@@ -2625,6 +2829,11 @@ tbody tr:hover {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 
+  .attestation-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .dashboard-two-column,
   .entry-layout,
   .form-layout,
@@ -2638,9 +2847,6 @@ tbody tr:hover {
     position: static;
   }
 
-  .licence-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
@@ -2727,12 +2933,12 @@ tbody tr:hover {
   }
 
   .metric-grid,
-  .licence-grid,
+  .research-grid,
+  .radio-card-grid,
   .summary-strip,
   .form-grid.two,
   .form-grid.four,
-  .outcome-options,
-  .renewal-steps {
+  .outcome-options {
     grid-template-columns: 1fr;
   }
 
@@ -2750,8 +2956,7 @@ tbody tr:hover {
     grid-column: auto;
   }
 
-  .summary-strip > div,
-  .renewal-steps > div {
+  .summary-strip > div {
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }

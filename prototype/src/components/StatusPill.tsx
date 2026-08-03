@@ -5,6 +5,9 @@ const STATUS: Record<ComplianceStatus, { glyph: string; label: string }> = {
   approaching: { glyph: "~", label: "Approaching limit" },
   outside: { glyph: "✕", label: "Outside target" },
   "no-data": { glyph: "—", label: "No data" },
+  provisional: { glyph: "◷", label: "Provisional" },
+  informational: { glyph: "i", label: "Informational" },
+  "not-applicable": { glyph: "·", label: "Not applicable" },
 };
 
 export function StatusPill({

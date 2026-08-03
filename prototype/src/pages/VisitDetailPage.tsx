@@ -41,7 +41,7 @@ export function VisitDetailPage() {
     return (
       <div>
         <PageHeader
-          eyebrow="Doctor-only area"
+          eyebrow="Health and Wellness Officer area"
           title="Visit not found"
           description="The requested demonstration visit is not available."
           action={
@@ -60,7 +60,7 @@ export function VisitDetailPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Doctor-only clinical record"
+        eyebrow="Health and Wellness Officer clinical record"
         title="Visit details"
         description="Review the complete stored record before making a follow-up decision."
         action={
