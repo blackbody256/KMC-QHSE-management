@@ -1,4 +1,6 @@
-The# KIIRA MOTORS CORPORATION
+> **SUPERSEDED — 3 August 2026.** This draft is retained for traceability only. `KMC_QHSE_MS_SRS_v2.0.md` replaces it in full and governs wherever the documents differ.
+
+# KIIRA MOTORS CORPORATION
 
 ## Health and Wellness Management System (HWMS)
 

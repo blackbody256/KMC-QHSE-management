@@ -1,3 +1,5 @@
+> **AUTHORITY NOTICE — 3 August 2026.** This brief remains authoritative for design language, accessibility, and implementation quality. Product naming, navigation, roles, KPI scope, architecture, and medical-licence screens are superseded by `docs/KMC_QHSE_MS_SRS_v2.0.md` and `docs/KMC_QHSE_Prototype_Spec_v0.3.md`.
+
 # KMC Health and Wellness Management System
 
 ## Version 1 Build Brief for a Coding Agent

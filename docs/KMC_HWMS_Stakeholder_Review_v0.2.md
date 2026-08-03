@@ -1,3 +1,5 @@
+> **HISTORICAL DECISION REGISTER.** Version 0.3 supersedes this document for active decisions; unresolved items were carried forward.
+
 # KMC HWMS Stakeholder Review and Demonstration Guide
 
 ## Meeting objective

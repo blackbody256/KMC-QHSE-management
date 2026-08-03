@@ -1,3 +1,5 @@
+> **HISTORICAL PROTOTYPE SPECIFICATION.** Version 0.3 supersedes this document for the active stakeholder prototype.
+
 # KMC HWMS Prototype v0.2
 
 ## Purpose

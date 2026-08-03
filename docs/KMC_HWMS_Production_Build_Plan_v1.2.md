@@ -1,6 +1,6 @@
 # KIIRA MOTORS CORPORATION
 
-## Health and Wellness Management System (HWMS)
+## Quality, Health, Safety and Environment Management System (QHSE MS)
 
 ### Production Build Plan
 
@@ -59,7 +59,7 @@ Eight deployables. Each owns its data exclusively and exposes it only through it
 | `hwms-gateway` | Edge | Routing, OIDC session for the browser, rate limiting | No business logic. Holds no data |
 | `hwms-admin` | Administration | Org structure, workstations, monitoring locations, parameters, effective-dated standards, KPI registry and targets, unit register | Every configurable rule in the system lives here |
 | `hwms-clinical` | Clinical | Patients, encounters, sections, signing, amendments | **Separate database instance, separate credentials, separate encryption key, separate network policy.** Only holder of the clinical scope |
-| `hwms-occupational` | Occupational health and ergonomics | Surveillance, disease cases, fitness for work, ergonomic assessments, corrective actions, licences | Holds no diagnosis and no clinical narrative |
+| `hwms-occupational` | Occupational health and ergonomics | Surveillance, disease cases, fitness for work, ergonomic assessments and corrective actions | Holds no diagnosis and no clinical narrative |
 | `hwms-safety` | Workplace safety | Incident register, investigations, exposure hours, safety corrective actions | New. See Section 3 |
 | `hwms-environment` | Environment and industrial hygiene | Monitoring plans, events, readings, limit evaluation; later sustainability records | Compliance state immutable once written |
 | `hwms-metrics` | Metrics and reporting | KPI computation, periodic returns, dashboard aggregation, report generation and archive | **Issued no clinical credentials at all.** Receives clinical figures only as counts |
@@ -377,7 +377,7 @@ Administration                 (Administrator only)
 
 **The module is "Health and Wellness"; the role is "Health and Wellness Officer".** The 31 July minutes conflated the two and recorded the module as being renamed to the role name. Correct the minutes rather than the naming.
 
-Note that **industrial hygiene and ambient monitoring are two views of one register**, not two registers, per 8.2. Note also that the medical certification register does not appear above; its removal is pending confirmation, see P-11.
+Note that **industrial hygiene and ambient monitoring are two views of one register**, not two registers, per 8.2. The medical certification register does not appear because its removal was confirmed at P-11; the generic expiry pattern remains available for approved permits, consents and calibration records.
 
 ---
 
@@ -415,13 +415,13 @@ Write that last test before the feature. It is the acceptance gate for ADR-03 an
 
 `hwms-safety`, incident register, severity classification, investigations, corrective actions, metrics S1 to S5, hours-worked return field.
 
-**Done when:** each classification on the ladder is recordable; the four requested metrics compute from the register with no manual entry; the investigated ratio moves when an investigation completes; a near miss records without an injury; the safety view of a clinically linked incident shows treatment status and nothing else, proved by test.
+**Done when:** every severity and classification can be recorded independently of the officer's Recordable/Not recordable determination; S1 to S5 compute from the register with no manual KPI entry; the investigated ratio moves when an investigation completes; a near miss records without an injury; the safety view of a clinically linked incident shows treatment status and nothing else, proved by test.
 
 ## Phase 5 — Environment and ergonomics
 
-`hwms-environment` and `hwms-occupational`: monitoring plans, events, readings, immutable limit evaluation, not-performed recording, ergonomic assessments, corrective actions, licence register with expiry alerting.
+`hwms-environment` and `hwms-occupational`: monitoring plans, events, readings, immutable limit evaluation, not-performed recording, ergonomic assessments, corrective actions, and the reusable expiry-tracked register for approved permits, consents and calibration records.
 
-**Done when:** a reading above limit stores a breach that survives a later change to the limit; an inactive parameter is visible, not enterable, and excluded from the index denominator; a not-performed event reduces completeness without affecting compliance; a licence 21 days from expiry raises a dashboard alert from a scheduled job.
+**Done when:** a reading above limit stores a breach that survives a later change to the limit; an inactive parameter is visible, not enterable, and excluded from the index denominator; a not-performed event reduces completeness without affecting compliance; an approved expiry-tracked record 21 days from renewal raises a dashboard alert from a scheduled job.
 
 ## Phase 6 — Reporting
 
@@ -541,13 +541,13 @@ The prototype track is confirming requirements in parallel. These are the constr
 
 5. **Add hours worked to the monthly return now.** It costs one input field in the prototype and it settles a question that otherwise surfaces halfway through Phase 4: whether rate-based safety metrics are wanted, and whether HR can supply monthly man-hours.
 
-6. **Rename to "Health and Wellness Officer" in labels only.** Keep `encounter` and `patient visit` as the internal and interface terms respectively, per SRS v1.1 Section 5.2. Renaming the domain vocabulary as well as the navigation label will cost more than it returns and will make the prototype harder to read against the specification.
+6. **Rename to "Health and Wellness Officer" in labels only.** Keep `encounter` and `patient visit` as the internal and interface terms respectively, per SRS v2.0 Section 5.1. Renaming the domain vocabulary as well as the navigation label will cost more than it returns and will make the prototype harder to read against the specification.
 
 7. **Read-only roles hide entry controls; they do not disable them.** A disabled button tells a director there is something they are not allowed to do, which invites a conversation about being allowed to do it. Hidden is calmer and matches Build Brief Section 2.1. Say plainly in the demonstration that this is a workflow illustration, not a security boundary.
 
 8. **Do not build the ergonomic template builder, attachments, photographs, or the amendment workflow.** All four are explicitly deferred, and all four are attractive to build. Deferral is a decision already taken.
 
-9. **Put the prototype under version control today.** There is no Git repository in this project. The principal delivery risk on record is handover, and a project whose only copy of the work is one laptop's filesystem has a larger and more mundane risk than any of the ones in the risk register.
+9. **Keep the prototype under version control.** A local repository was initialised on 3 August 2026. A KMC-approved private remote remains a handover blocker because local Git alone does not remove the single-filesystem loss risk.
 
 10. **Resolve the two specifications into one.** SRS v1.0 and SRS v1.1 disagree — retention, hosting, patient categories, minimum cell size, and now architecture. Production cannot be built against two documents that contradict each other. Issue **v2.0** merging them: v1.1's confirmed-versus-proposed labelling discipline applied to v1.0's completeness, plus ADR-13 from Section 1.1, the safety unit from Section 3, the read-only roles from Section 2.3, and the unit structure from Section 8. Everything the stakeholders confirm on the prototype track lands in that document.
 
