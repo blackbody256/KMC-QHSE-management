@@ -1,5 +1,7 @@
 # KMC QHSE Management System Prototype v0.3
 
+> **Superseded on 7 August 2026 by `KMC_HWMS_Prototype_Spec_v0.4.md`.** Preserved as project history; it demonstrates the department-wide scope that was deliberately removed after the 4 August meeting.
+
 **Date:** 3 August 2026  
 **Status:** Stakeholder workflow prototype; synthetic data only
 
@@ -48,4 +50,3 @@ The prototype is not the first production increment. Its code, browser storage, 
 3. Sign in as Health and Wellness Officer, review a patient’s prior visit, create an incident and inspect attestation rules.
 4. Open Industrial Hygiene and Environment to show two contextual views over one monitoring register.
 5. Open the remaining unit cards and confirm that they are labelled as benchmark proposals without figures or entry controls.
-

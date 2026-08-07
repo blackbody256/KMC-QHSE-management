@@ -1,0 +1,31 @@
+# Prometheus scrape configuration.
+#
+# Services expose route-templated request metrics. No metric label carries a
+# patient, encounter or incident identifier — separately from the privacy rule,
+# unbounded label cardinality would destroy this database, so the two concerns
+# point the same way.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    system: hwms
+
+scrape_configs:
+  - job_name: gateway
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["gateway:8081"]
+        labels:
+          service: gateway
+
+  - job_name: identity
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["identity:8082"]
+        labels:
+          service: identity
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

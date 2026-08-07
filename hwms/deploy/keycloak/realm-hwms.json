@@ -1,0 +1,107 @@
+{
+  "realm": "hwms",
+  "displayName": "KMC QHSE Management System",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "waitIncrementSeconds": 60,
+  "failureFactor": 5,
+
+  "passwordPolicy": "length(12) and digits(1) and notUsername and notEmail",
+
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "accessTokenLifespan": 300,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "hwms-officer",
+        "description": "Health and Wellness Officer. Records patient visits, monitoring, ergonomics and safety incidents. The only role with access to individual clinical records."
+      },
+      {
+        "name": "hwms-manager",
+        "description": "Manager. Read-only operational summaries and aggregate drilldowns, plus administration of officer and director accounts. No clinical access."
+      },
+      {
+        "name": "hwms-director",
+        "description": "Director. Executive summaries and trends only. No entry controls, no drilldown, no clinical access."
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "hwms-gateway",
+      "name": "HWMS gateway",
+      "description": "Confidential client for the backend-for-frontend gateway. The browser never holds a token issued to this client.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "development-only-gateway-secret-rotate-me",
+      "redirectUris": [
+        "http://localhost:8080/auth/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/login"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "profile",
+        "roles",
+        "email"
+      ]
+    },
+    {
+      "clientId": "hwms-identity",
+      "name": "HWMS identity service",
+      "description": "Service account used by the identity service to administer accounts on the manager's behalf. Never used by a browser.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "development-only-identity-secret-rotate-me"
+    }
+  ],
+
+  "clientScopeMappings": {},
+
+  "users": [
+    {
+      "username": "service-account-hwms-identity",
+      "enabled": true,
+      "serviceAccountClientId": "hwms-identity",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "view-realm"
+        ]
+      }
+    }
+  ]
+}

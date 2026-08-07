@@ -1,64 +1,57 @@
-# KMC QHSE Management System Prototype v0.3
+# KMC Health and Wellness Dashboard Prototype v0.4
 
-This stakeholder prototype demonstrates how Health and Wellness and Workplace Safety operational records produce an executive QHSE dashboard. It uses synthetic browser-local data only and is not suitable for real patient, employee, incident or compliance records.
+> **Proposed product name:** the 4 August 2026 “DQHSE Dashboard” name was overtaken by the later decision to scope the system to Health and Wellness only. Client confirmation is pending.
 
-The prototype is not the first increment of production. Its code, demo authentication, local-storage state and synthetic records will not migrate. The enduring outputs are confirmed decisions, the design language and reusable React components.
+This stakeholder prototype covers the Health and Wellness division only: Occupational Health, Ergonomics and Wellness, and Industrial Hygiene. It uses synthetic browser-local data and is not suitable for real patient, employee, laboratory or referral records.
 
-## Run locally
-
-Requirements: Node.js 20 or later and npm.
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the Vite URL, normally `http://localhost:5173`.
-
-Verification:
+Production verification:
 
 ```bash
 npm test
 npm run build
-npm run preview
 ```
 
 ## Demonstration accounts
 
-| Role | Email | Password | Workflow |
+| Role | Email | Password | Access |
 |---|---|---|---|
-| Health and Wellness Officer | `officer@kmc.demo` | `Officer#2026` | Clinical history and operational entry |
-| QHSE Manager | `manager@kmc.demo` | `Manager#2026` | Read-only unit summaries and suppressed drilldowns |
-| QHSE Director | `director@kmc.demo` | `Director#2026` | Read-only executive dashboard and trends |
+| Health and Wellness Officer | `officer@kmc.demo` | `Officer#2026` | Patients, visits, laboratory testing, referrals and operational entry |
+| Health and Wellness Manager | `manager@kmc.demo` | `Manager#2026` | Read-only monthly returns and operational summaries; no clinical records |
+| Director viewer | `director@kmc.demo` | `Director#2026` | Read-only dashboard and trends |
 
-There is no unauthenticated dashboard and no role-switch dropdown. The login is a workflow simulation, not production security.
+## v0.4 walkthrough
 
-## Suggested walkthrough
+1. Open the dashboard and verify nine indicators: the five client health/safety summary KPIs plus four retained occupational health indicators.
+2. Confirm every KPI has a reporting-month value, a year-to-date average or “Incomplete history”, a glyph-and-word status, target, direction and provenance.
+3. Verify Reportable Near Misses is labelled “Higher is better” with target `≥ 200`.
+4. Open Monthly returns and confirm safety figures are attributed values with an owner-pending note, not records from a local incident register.
+5. Sign in as the Officer, open a visit and raise a laboratory request. Enter an abnormal result and confirm the warning does not block saving.
+6. Raise a referral from a visit, confirm the vitals are pre-filled, and move it through drafted, authorised, issued, returned and reviewed.
+7. Enter recommended sick leave in returned feedback and verify the linked days appear in Monthly returns and Health-Related Absenteeism.
+8. Download the clinical referral PDF and verify the form number, confidentiality declaration, duplicate Section E labels and printed “KMC infirmary officer” wording.
+9. Sign in as Manager or Director and verify patient, visit, laboratory and referral routes are denied.
 
-1. Sign in as Director. Review the five Health and Wellness KPIs and five safety indicators for July 2026.
-2. Select August 2026 and show that an open, empty safety register displays **No data**, not zero.
-3. Sign in as Manager. Open Workplace Safety and show that exact dates, shifts, locations and event rows are absent; small units are suppressed.
-4. Review Monthly Returns in read-only mode and note that hours worked is not supplied and feeds no rate.
-5. Sign in as Health and Wellness Officer. Open a patient’s complete past-visit history.
-6. Record an incident using radio-button choices, a manual recordability determination and an explicit investigation-required decision.
-7. Review the safety/clinical boundary: the safety module receives only “Treated by Health and Wellness: Yes/No.”
-8. Compare Industrial Hygiene and Environment views over the same monitoring register. Context fixes the standard family and only eligible occupational readings feed K4.
-9. Open the Workplace Safety, Environment and Quality research cards and confirm they show no figures, charts or data-entry controls.
-10. Use **Reset demo** to restore July attested and August open/empty seed data.
+## Important boundaries
 
-## Important constraints
+- Safety figures remain visible, but their authoritative owner is awaiting Benard’s confirmation. There is no parallel incident register.
+- Management authorisation uses a proposed minimum-disclosure summary. Management clinical access is not granted.
+- The generic laboratory field set and ranges are proposals awaiting the actual KMC laboratory forms.
+- KPI targets, hygiene limits and laboratory ranges are represented as effective-dated reference records. Results/readings snapshot what was applied.
+- Missing values display as “No data”; synthetic records are labelled; abnormal clinical values warn and never block.
+- Browser data is stored under `kmc-health-wellness-demo-v3`.
 
-- Browser data is stored under `kmc-qhse-demo-v2`.
-- All operational and clinical records are fictional.
-- Medical certification tracking and KPIs K6/K7 were withdrawn through the recorded stakeholder decision. The generic expiry pattern remains for future permits, consents and calibration.
-- The minimum disclosure cell size of five is proposed pending Data Protection Officer approval.
-- Environmental limits and KPI formulas labelled Proposed require accountable-owner approval.
-- A signed visit is locked in the interface; production append-only amendment remains deferred.
-- Production requires Keycloak, Go services, Postgres, server-side authorization, audit, encryption, backup and KMC infrastructure.
+## Current documents
 
-## Governing documents
+- `docs/KMC_HWMS_SRS_v2.1_DRAFT.md`
+- `docs/KMC_HWMS_Prototype_Spec_v0.4.md`
+- `docs/KMC_HWMS_Stakeholder_Decision_Register_v0.4.md`
+- `docs/KMC_HWMS_Production_Build_Plan_v1.3.md`
 
-- [QHSE SRS v2.0](../docs/KMC_QHSE_MS_SRS_v2.0.md)
-- [Prototype specification v0.3](../docs/KMC_QHSE_Prototype_Spec_v0.3.md)
-- [Stakeholder decision register v0.3](../docs/KMC_QHSE_Stakeholder_Decision_Register_v0.3.md)
-- [Production build plan v1.2](../docs/KMC_HWMS_Production_Build_Plan_v1.2.md)
+Earlier versions remain in `docs/` and are explicitly marked superseded.

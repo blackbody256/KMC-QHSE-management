@@ -229,7 +229,7 @@ export function ErgonomicsPage() {
           <CalendarClock size={22} aria-hidden="true" />
           <h2>Next design decision</h2>
           <p>
-            K5 cannot become an approved KPI until action status, evidence, due dates, and closure
+            OH4 cannot become an approved KPI until action status, evidence, due dates, and closure
             authority are defined.
           </p>
         </aside>

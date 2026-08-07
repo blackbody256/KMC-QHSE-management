@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, FileWarning, Info, ShieldCheck } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarDays, Database, FileWarning, ShieldCheck } from "lucide-react";
 import {
   CartesianGrid,
   Legend,
@@ -10,146 +10,83 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { MetricCard } from "../components/MetricCard";
 import { PageHeader } from "../components/PageHeader";
-import { StatusPill } from "../components/StatusPill";
-import {
-  buildDashboardSnapshot,
-  buildSafetyDashboardSnapshot,
-  trendData,
-} from "../lib/calculations";
-import { AppLink } from "../lib/router";
+import { ProvenanceChip, StatusPill } from "../components/StatusPill";
+import { buildDashboardSnapshot, trendData } from "../lib/calculations";
 import { useDemoStore } from "../store/DemoStore";
-
-const periodStateCopy = {
-  "open-empty": { status: "no-data" as const, label: "Open · no events entered" },
-  "open-provisional": { status: "provisional" as const, label: "Open · provisional" },
-  "attested-empty": { status: "within" as const, label: "Attested · final zero" },
-  "attested-final": { status: "within" as const, label: "Attested · final values" },
-};
 
 export function DashboardPage() {
   const { state } = useDemoStore();
   const periods = useMemo(
     () =>
-      [
-        ...new Set([
-          ...state.plans.map((item) => item.period),
-          ...state.safetyAttestations.map((item) => item.period),
-          ...state.safetyIncidents.map((item) => item.period),
-        ]),
-      ].sort((a, b) => b.localeCompare(a)),
-    [state],
+      [...new Set([...state.monthlyReturns.map((item) => item.period), ...state.plans.map((item) => item.period)])]
+        .sort((a, b) => b.localeCompare(a)),
+    [state.monthlyReturns, state.plans],
   );
   const [period, setPeriod] = useState(
     periods.includes("2026-07") ? "2026-07" : periods[0] ?? "2026-07",
   );
   const snapshot = useMemo(() => buildDashboardSnapshot(state, period), [state, period]);
-  const safety = useMemo(
-    () => buildSafetyDashboardSnapshot(state, period),
-    [state, period],
-  );
   const trends = useMemo(() => trendData(state), [state]);
-  const safetyState = periodStateCopy[safety.periodState];
-  const isDirector = state.role === "director";
+  const healthMetrics = snapshot.metrics.filter((metric) => metric.id.startsWith("OH"));
+  const summaryMetrics = snapshot.metrics.filter((metric) => metric.id.startsWith("S"));
 
   return (
     <div>
       <PageHeader
-        eyebrow="Executive overview"
-        title="QHSE performance"
-        description="Operational records produce the dashboard; provenance and incomplete states remain visible."
+        eyebrow="Health and Wellness Dashboard · proposed name"
+        title="Health and Wellness performance"
+        description="Monthly and year-to-date results for the one division now in scope. Every value keeps its source visible."
         action={
           <label className="period-control">
             <CalendarDays size={17} aria-hidden="true" />
             <span className="sr-only">Reporting period</span>
             <select value={period} onChange={(event) => setPeriod(event.target.value)}>
               {periods.map((item) => (
-                <option key={item} value={item}>
-                  {formatPeriod(item)}
-                </option>
+                <option key={item} value={item}>{formatPeriod(item)}</option>
               ))}
             </select>
           </label>
         }
       />
 
-      <section className="summary-strip" aria-label="Dashboard context">
-        <div>
-          <span className="summary-label">Reporting period</span>
-          <strong>{snapshot.periodLabel}</strong>
+      <section className="kpi-summary-band" aria-label="KPI summary">
+        <div className="summary-score">
+          <span className="summary-label">Health and Wellness · {snapshot.periodLabel}</span>
+          <strong><span>{snapshot.onTarget}</span> of {snapshot.totalMetrics} KPIs on target</strong>
+          <small>{snapshot.noData ? `${snapshot.noData} with no monthly data` : "All monthly values received"}</small>
         </div>
-        <div>
-          <span className="summary-label">Monthly return</span>
-          <strong>{snapshot.returnRow ? "Received" : "No data"}</strong>
-        </div>
-        <div>
-          <span className="summary-label">Safety register</span>
-          <StatusPill status={safetyState.status} compact label={safetyState.label} />
-        </div>
-        <div className="summary-callout">
-          <ShieldCheck size={16} aria-hidden="true" />
-          <span>{isDirector ? "Executive summary only" : "Role-controlled operational view"}</span>
+        <div className="summary-source">
+          <ShieldCheck size={20} aria-hidden="true" />
+          <div>
+            <strong>One division in scope</strong>
+            <span>Occupational Health · Ergonomics and Wellness · Industrial Hygiene</span>
+          </div>
         </div>
       </section>
 
-      <section className="decision-callout" aria-label="Reporting-template decision">
+      <section className="decision-callout" aria-label="Safety data ownership decision">
         <FileWarning size={20} aria-hidden="true" />
         <div>
-          <strong>Five Health and Wellness KPIs are shown instead of the template’s seven</strong>
+          <strong>Safety figures are attributed returns; the authoritative owner is not yet confirmed</strong>
           <span>
-            K6/K7 medical certification tracking was withdrawn through the verbal 31 July 2026
-            stakeholder decision. Generic permit and calibration expiry tracking is retained for
-            future confirmed units.
+            Fatalities, incidents, injuries and near misses remain visible, but this system does not maintain a parallel incident register. Benard must confirm whether Workplace Safety supplies monthly returns or an integration.
           </span>
         </div>
       </section>
 
-      <section aria-labelledby="health-kpi-heading">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">Health and Wellness</div>
-            <h2 id="health-kpi-heading">Five primary indicators</h2>
-          </div>
-          <span className="section-meta">Formulas remain labelled where approval is open</span>
-        </div>
-        <div className="metric-grid">
-          {snapshot.metrics.map((item) => (
-            <MetricCard key={item.id} metric={item} />
-          ))}
-        </div>
-      </section>
-
-      <section aria-labelledby="safety-kpi-heading" className="dashboard-section">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">Workplace Safety</div>
-            <h2 id="safety-kpi-heading">Event-derived safety indicators</h2>
-          </div>
-          {!isDirector && (
-            <AppLink className="text-link" to="/workplace-safety">
-              Open privacy-controlled unit view →
-            </AppLink>
-          )}
-        </div>
-        {safety.periodState === "open-empty" && (
-          <div className="attestation-explainer">
-            <Info size={20} aria-hidden="true" />
-            <div>
-              <strong>No data is intentionally different from zero</strong>
-              <span>
-                This period is open and has no incidents. Compare it with an attested empty period:
-                only the attested period may report a final zero.
-              </span>
-            </div>
-          </div>
-        )}
-        <div className="metric-grid safety-metric-grid">
-          {safety.metrics.map((item) => (
-            <MetricCard key={item.id} metric={item} />
-          ))}
-        </div>
-      </section>
+      <KpiSection
+        eyebrow="Client dashboard panel"
+        title="Health and safety summary"
+        metrics={summaryMetrics}
+        periodLabel={snapshot.periodLabel}
+      />
+      <KpiSection
+        eyebrow="Retained indicators"
+        title="Occupational health controls"
+        metrics={healthMetrics}
+        periodLabel={snapshot.periodLabel}
+      />
 
       <section className="panel trend-panel dashboard-section" aria-labelledby="trend-heading">
         <div className="panel-heading">
@@ -157,42 +94,19 @@ export function DashboardPage() {
             <div className="eyebrow">Twelve-month view</div>
             <h2 id="trend-heading">Health performance trend</h2>
           </div>
-          <span className="provenance">Manual returns</span>
+          <span className="provenance">Synthetic attributed returns</span>
         </div>
         <div className="chart-frame">
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={trends} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="#e5e8ed" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="period" tick={{ fill: "#667085", fontSize: 11 }} />
-              <YAxis yAxisId="left" domain={[0, 0.7]} tick={{ fill: "#667085", fontSize: 11 }} width={34} />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                domain={[70, 100]}
-                tickFormatter={(value) => `${value}%`}
-                tick={{ fill: "#667085", fontSize: 11 }}
-                width={44}
-              />
+              <YAxis yAxisId="left" tick={{ fill: "#667085", fontSize: 11 }} width={34} />
+              <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} tick={{ fill: "#667085", fontSize: 11 }} width={44} />
               <Tooltip contentStyle={{ borderRadius: 4, borderColor: "#d0d5dd" }} />
               <Legend />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="absenteeism"
-                name="Absenteeism · days/person"
-                stroke="#e51f2b"
-                strokeWidth={2.5}
-                dot={{ r: 3 }}
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="surveillance"
-                name="Surveillance · %"
-                stroke="#1769aa"
-                strokeWidth={2.5}
-                dot={{ r: 3 }}
-              />
+              <Line yAxisId="left" type="monotone" dataKey="absenteeism" name="Absenteeism · days/person" stroke="#1769aa" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line yAxisId="right" type="monotone" dataKey="surveillance" name="Surveillance · %" stroke="#087f5b" strokeWidth={2.5} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -200,13 +114,7 @@ export function DashboardPage() {
           <summary>View exact trend values</summary>
           <div className="table-scroll">
             <table>
-              <thead>
-                <tr>
-                  <th>Period</th>
-                  <th>Absenteeism</th>
-                  <th>Surveillance</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Period</th><th>Absenteeism</th><th>Surveillance</th></tr></thead>
               <tbody>
                 {trends.map((row) => (
                   <tr key={row.periodCode}>
@@ -221,6 +129,79 @@ export function DashboardPage() {
         </details>
       </section>
     </div>
+  );
+}
+
+function KpiSection({
+  eyebrow,
+  title,
+  metrics,
+  periodLabel,
+}: {
+  eyebrow: string;
+  title: string;
+  metrics: ReturnType<typeof buildDashboardSnapshot>["metrics"];
+  periodLabel: string;
+}) {
+  return (
+    <section className="panel kpi-table-panel dashboard-section" aria-labelledby={`${title.replaceAll(" ", "-")}-heading`}>
+      <div className="panel-heading">
+        <div>
+          <div className="eyebrow">{eyebrow}</div>
+          <h2 id={`${title.replaceAll(" ", "-")}-heading`}>{title}</h2>
+        </div>
+        <span className="section-meta">YTD is an average of complete monthly history</span>
+      </div>
+      <div className="table-scroll">
+        <table className="kpi-table">
+          <thead>
+            <tr>
+              <th>Indicator</th>
+              <th>Target and direction</th>
+              <th>{periodLabel}</th>
+              <th>Year-to-date average</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {metrics.map((metric) => (
+              <tr key={metric.id}>
+                <td>
+                  <span className="metric-id">{metric.id}</span>
+                  <strong className="kpi-name">{metric.name}</strong>
+                  <small>{metric.note}</small>
+                </td>
+                <td>
+                  <strong className="data-cell">{metric.target}</strong>
+                  <span className={`direction-label direction-${metric.direction}`}>
+                    {metric.direction === "higher" ? <ArrowUp size={14} aria-hidden="true" /> : <ArrowDown size={14} aria-hidden="true" />}
+                    {metric.direction === "higher" ? "Higher is better" : "Lower is better"}
+                  </span>
+                </td>
+                <MetricValueCell value={metric.month} />
+                <MetricValueCell value={metric.yearToDate} />
+                <td>
+                  <ProvenanceChip provenance={metric.provenance} proposed={metric.proposed} />
+                  {metric.provenance === "Attributed return" && (
+                    <span className="source-pending"><Database size={13} aria-hidden="true" /> Owner pending</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function MetricValueCell({ value }: { value: ReturnType<typeof buildDashboardSnapshot>["metrics"][number]["month"] }) {
+  return (
+    <td className="kpi-value-cell">
+      <strong className="metric-value">{value.displayValue}</strong>
+      {value.note && <small>{value.note}</small>}
+      <StatusPill status={value.status} compact />
+    </td>
   );
 }
 

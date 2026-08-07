@@ -1,5 +1,7 @@
 # KIIRA MOTORS CORPORATION
 
+> **Superseded on 7 August 2026 by `KMC_HWMS_Production_Build_Plan_v1.3.md`.** Preserved as project history; its department-wide services and expansion phases were deliberately removed after the 4 August scope decision.
+
 ## Quality, Health, Safety and Environment Management System (QHSE MS)
 
 ### Production Build Plan

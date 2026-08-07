@@ -1,0 +1,196 @@
+@import "./tokens.css";
+
+/* Self-hosted. Nothing is fetched from a font CDN: this system is deployed on
+   premise and must render identically with no route to the internet. */
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/500.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/public-sans/700.css";
+@import "@fontsource/roboto-mono/400.css";
+@import "@fontsource/roboto-mono/500.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Keyboard focus is always visible and never red. A red focus ring in a
+     compliance interface is indistinguishable from an error state. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  /* Sentence case throughout, including buttons and headings. Never title
+     case, per the copy rules. */
+  button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@layer components {
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+
+  /* Structure comes from hairlines and whitespace. No drop shadows and no
+     gradients in the content area — both read as consumer software and cost
+     vertical rhythm in a dense data view. */
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .panel-body {
+    padding: var(--space-6);
+  }
+
+  .label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ink-muted);
+    margin-bottom: var(--space-1);
+  }
+
+  .field {
+    width: 100%;
+    padding: 9px var(--space-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .field::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .field:disabled {
+    background: var(--surface-sunken);
+    color: var(--ink-faint);
+  }
+
+  /* One primary action per screen at most. This is the second of the three
+     places KMC red is permitted. */
+  .button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 9px var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: var(--kmc-red);
+    color: var(--ink-inverse);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .button-primary:hover:not(:disabled) {
+    background: var(--kmc-red-deep);
+  }
+
+  .button-primary:disabled {
+    background: var(--rule-strong);
+    color: var(--surface);
+    cursor: not-allowed;
+  }
+
+  .button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 9px var(--space-4);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .button-secondary:hover:not(:disabled) {
+    border-color: var(--ink-muted);
+  }
+
+  /* Every measured, counted or computed value uses this. Tabular figures make
+     a column of readings align on the decimal and reduce digit transposition,
+     which matters when someone is reading back a blood pressure. */
+  .data-value {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+
+  .table th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink-muted);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+
+  .table td {
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+@layer utilities {
+  .icon {
+    display: inline-block;
+    flex: none;
+    line-height: 0;
+  }
+
+  /* The imported symbols carry no fill of their own, so they take the colour
+     of the text around them. An icon is never the only carrier of meaning, so
+     it never needs a colour of its own either. */
+  .icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: currentColor;
+  }
+}

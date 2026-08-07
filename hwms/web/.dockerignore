@@ -1,0 +1,12 @@
+# Keep the build context small. node_modules is reinstalled from the lockfile
+# inside the image, and dist is rebuilt there — shipping either wastes time on
+# every build and risks the image disagreeing with the lockfile.
+node_modules
+dist
+.env
+.env.*
+*.log
+
+# Login imagery is supplied per deployment, not baked into the image.
+public/images/*.jpg
+public/images/*.png

@@ -3,16 +3,14 @@ import type { DemoRole } from "../types";
 const officerOnlyPrefixes = [
   "/patients",
   "/patient-visits",
-  "/workplace-safety/incidents/new",
+  "/laboratory",
+  "/referrals",
 ];
 
 const operationalPrefixes = [
   "/monthly-returns",
   "/industrial-hygiene",
   "/ergonomics-wellness",
-  "/workplace-safety",
-  "/environment-sustainability",
-  "/quality-inspection-testing",
 ];
 
 export const roleCanAccessPath = (role: DemoRole, path: string): boolean => {

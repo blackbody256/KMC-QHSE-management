@@ -1,5 +1,7 @@
 # KIIRA MOTORS CORPORATION
 
+> **Superseded on 7 August 2026 by `KMC_HWMS_SRS_v2.1_DRAFT.md`.** Preserved as project history; the successor reflects the post-meeting Health and Wellness-only scope.
+
 ## Quality, Health, Safety and Environment Management System
 
 ### System Requirements Specification
@@ -270,4 +272,3 @@ The v0.3 prototype is accepted for stakeholder review when:
 - ISO 9001, ISO/IEC 17025, ISO 10012 and ISO 19011 for quality, laboratory, measurement and audit benchmark structure.
 
 These international materials guide candidate fields and questions. They do not create a Ugandan legal recordability rule or an approved KMC requirement.
-

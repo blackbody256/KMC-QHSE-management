@@ -2,7 +2,7 @@ import type { ComplianceStatus, MetricProvenance, SectionStatus } from "../types
 
 const STATUS: Record<ComplianceStatus, { glyph: string; label: string }> = {
   within: { glyph: "✓", label: "Within target" },
-  approaching: { glyph: "~", label: "Approaching limit" },
+  approaching: { glyph: "~", label: "Approaching target" },
   outside: { glyph: "✕", label: "Outside target" },
   "no-data": { glyph: "—", label: "No data" },
   provisional: { glyph: "◷", label: "Provisional" },

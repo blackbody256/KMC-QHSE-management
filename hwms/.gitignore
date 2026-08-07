@@ -1,0 +1,28 @@
+# Secrets. Nothing resembling a credential belongs in this repository.
+.env
+*.pem
+*.key
+deploy/k8s/secrets.yaml
+
+# Build output
+/dist/
+web/dist/
+web/node_modules/
+node_modules/
+
+# Go
+*.exe
+*.test
+*.out
+
+# Login imagery is supplied per deployment and is not source. The README in
+# that directory states what is expected.
+web/public/images/*.jpg
+web/public/images/*.png
+!web/public/images/README.md
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+*.swp

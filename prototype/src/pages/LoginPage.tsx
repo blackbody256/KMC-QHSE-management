@@ -38,7 +38,7 @@ export function LoginPage() {
       <section className="login-introduction">
         <div className="login-brand" aria-label="Kiira Motors Corporation">
           <div className="brand-logo-image" aria-hidden="true" />
-          <span>QHSE Management System</span>
+          <span>Health & Wellness Dashboard · proposed name</span>
         </div>
         <div className="login-copy">
           <span className="login-kicker">Stakeholder workflow prototype</span>
@@ -52,7 +52,7 @@ export function LoginPage() {
           <ShieldCheck size={22} aria-hidden="true" />
           <div>
             <strong>Patient privacy is demonstrated by role</strong>
-            <span>Viewer accounts cannot open patient names, visits, clinical notes, or incident rows.</span>
+            <span>Viewer accounts cannot open patient names, visits, laboratory results, or clinical referrals.</span>
           </div>
         </div>
       </section>
@@ -137,7 +137,7 @@ export function LoginPage() {
             </div>
           </label>
           <button className="button button-primary login-submit" type="submit">
-            Sign in to QHSE
+            Sign in to Health & Wellness
             <ArrowRight size={17} aria-hidden="true" />
           </button>
         </form>

@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: hwms
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: hwms
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_USER
+              value: hwms
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: POSTGRES_PASSWORD }
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "hwms"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: hwms
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - port: 8180
+      targetPort: 8180
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: hwms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.0
+          # Production mode, not start-dev. The realm is imported once and then
+          # managed through Keycloak itself; re-importing on every start would
+          # silently discard accounts the manager created.
+          args: ["start", "--optimized"]
+          env:
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: jdbc:postgresql://postgres:5432/keycloak
+            - name: KC_DB_USERNAME
+              value: hwms
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: POSTGRES_PASSWORD }
+            - name: KC_HTTP_PORT
+              value: "8180"
+            - name: KC_HOSTNAME
+              valueFrom:
+                configMapKeyRef: { name: hwms-config, key: APP_BASE_URL }
+            # Deliberately /idp and not /auth: the gateway owns /auth/login,
+            # /auth/callback, /auth/session and /auth/logout on the same host,
+            # and two owners of one prefix is a routing bug waiting to be
+            # written.
+            - name: KC_HTTP_RELATIVE_PATH
+              value: /idp
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: admin
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: KEYCLOAK_ADMIN_PASSWORD }
+          ports:
+            - containerPort: 8180
+          readinessProbe:
+            httpGet: { path: /idp/health/ready, port: 8180 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 200m, memory: 512Mi }
+            limits: { memory: 1500Mi }

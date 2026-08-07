@@ -1,5 +1,7 @@
 # KMC QHSE Stakeholder Decision Register v0.3
 
+> **Superseded on 7 August 2026 by `KMC_HWMS_Stakeholder_Decision_Register_v0.4.md`.** Preserved as project history; several v0.3 assumptions were overtaken by the post-meeting scope decision.
+
 **Date:** 3 August 2026  
 **Status:** Active prototype decisions and open production confirmations
 
@@ -38,4 +40,3 @@
 ## Template deviation
 
 The supplied executive reporting template lists seven Health and Wellness primary KPIs. Prototype v0.3 displays K1–K5 and states that K6/K7 were withdrawn through the verbal decision at D11. The five Workplace Safety metrics are presented as a separate group and do not silently replace the withdrawn template rows.
-

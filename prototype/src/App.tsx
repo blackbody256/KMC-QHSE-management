@@ -7,16 +7,19 @@ import { NewPatientPage } from "./pages/NewPatientPage";
 import { PatientVisitsPage } from "./pages/PatientVisitsPage";
 import { NewVisitPage } from "./pages/NewVisitPage";
 import { MonthlyReturnsPage } from "./pages/MonthlyReturnsPage";
-import { EnvironmentPage } from "./pages/EnvironmentPage";
+import { IndustrialHygienePage } from "./pages/IndustrialHygienePage";
 import { ErgonomicsPage } from "./pages/ErgonomicsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LoginPage } from "./pages/LoginPage";
 import { VisitDetailPage } from "./pages/VisitDetailPage";
-import { WorkplaceSafetyPage } from "./pages/WorkplaceSafetyPage";
-import { NewSafetyIncidentPage } from "./pages/NewSafetyIncidentPage";
-import { QualityResearchPage } from "./pages/QualityResearchPage";
 import { AccessDeniedPage } from "./pages/AccessDeniedPage";
 import { roleCanAccessPath } from "./lib/access";
+import { LaboratoryPage } from "./pages/LaboratoryPage";
+import { NewLabRequestPage } from "./pages/NewLabRequestPage";
+import { LabRequestDetailPage } from "./pages/LabRequestDetailPage";
+import { ReferralsPage } from "./pages/ReferralsPage";
+import { NewReferralPage } from "./pages/NewReferralPage";
+import { ReferralDetailPage } from "./pages/ReferralDetailPage";
 
 export default function App() {
   const { state, currentUser } = useDemoStore();
@@ -54,22 +57,28 @@ export default function App() {
       page = <MonthlyReturnsPage />;
       break;
     case "/industrial-hygiene":
-      page = <EnvironmentPage mode="industrial" />;
+      page = <IndustrialHygienePage />;
       break;
     case "/ergonomics-wellness":
       page = <ErgonomicsPage />;
       break;
-    case "/workplace-safety":
-      page = <WorkplaceSafetyPage />;
+    case "/laboratory":
+      page = <LaboratoryPage />;
       break;
-    case "/workplace-safety/incidents/new":
-      page = <NewSafetyIncidentPage />;
+    case "/laboratory/new":
+      page = <NewLabRequestPage />;
       break;
-    case "/environment-sustainability":
-      page = <EnvironmentPage mode="environment" />;
+    case "/laboratory/details":
+      page = <LabRequestDetailPage />;
       break;
-    case "/quality-inspection-testing":
-      page = <QualityResearchPage />;
+    case "/referrals":
+      page = <ReferralsPage />;
+      break;
+    case "/referrals/new":
+      page = <NewReferralPage />;
+      break;
+    case "/referrals/details":
+      page = <ReferralDetailPage />;
       break;
     case "/access-denied":
       page = <AccessDeniedPage />;

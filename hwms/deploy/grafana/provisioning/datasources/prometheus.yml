@@ -1,0 +1,19 @@
+# Grafana is for operating the system.
+#
+# It is not a second route to the Division's data. No dashboard here queries a
+# clinical database, and no dashboard reproduces a KPI: the Division's
+# dashboard is the product, subject to the access matrix and the suppression
+# rules, and a Grafana panel is subject to neither. Access is ICT and the
+# maintainer only.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s

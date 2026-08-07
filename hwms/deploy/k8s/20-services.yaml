@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: hwms
+spec:
+  selector: { app: gateway }
+  ports:
+    - port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: hwms
+spec:
+  # One replica until the session store is shared. The in-memory store in
+  # services/gateway/session.go is single-instance by construction: two
+  # replicas would not share sessions and users would appear to be signed out
+  # at random. Replace the store before raising this number.
+  replicas: 1
+  selector:
+    matchLabels: { app: gateway }
+  template:
+    metadata:
+      labels: { app: gateway }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: gateway
+          image: ghcr.io/kiiramotors/hwms-gateway:latest
+          env:
+            - name: GATEWAY_ADDR
+              value: ":8081"
+            - name: OIDC_CLIENT_ID
+              value: hwms-gateway
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: GATEWAY_CLIENT_SECRET }
+            - name: OIDC_REDIRECT_URL
+              value: https://qhse.kiiramotors.local/auth/callback
+          envFrom:
+            - configMapRef: { name: hwms-config }
+          ports:
+            - containerPort: 8081
+          livenessProbe:
+            httpGet: { path: /livez, port: 8081 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8081 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity
+  namespace: hwms
+spec:
+  selector: { app: identity }
+  ports:
+    - port: 8082
+      targetPort: 8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity
+  namespace: hwms
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: identity }
+  template:
+    metadata:
+      labels: { app: identity }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: identity
+          image: ghcr.io/kiiramotors/hwms-identity:latest
+          env:
+            - name: IDENTITY_ADDR
+              value: ":8082"
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              value: hwms-identity
+            - name: KEYCLOAK_ADMIN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: IDENTITY_CLIENT_SECRET }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: POSTGRES_PASSWORD }
+            - name: DATABASE_URL
+              value: postgres://hwms:$(POSTGRES_PASSWORD)@postgres:5432/identity?sslmode=disable
+          envFrom:
+            - configMapRef: { name: hwms-config }
+          ports:
+            - containerPort: 8082
+          livenessProbe:
+            httpGet: { path: /livez, port: 8082 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8082 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: hwms
+spec:
+  selector: { app: web }
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: hwms
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: web }
+  template:
+    metadata:
+      labels: { app: web }
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/kiiramotors/hwms-web:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /index.html, port: 8080 }
+            initialDelaySeconds: 5
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { memory: 128Mi }
+---
+# TLS terminates here, satisfying NFR-SEC-01. The certificate is issued by
+# whatever KMC ICT uses internally; cert-manager is assumed but not required.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hwms
+  namespace: hwms
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: ["qhse.kiiramotors.local"]
+      secretName: hwms-tls
+  rules:
+    - host: qhse.kiiramotors.local
+      http:
+        paths:
+          # Keycloak is served under /idp on the same host, so that the issuer
+          # the browser sees and the address the cluster resolves are one
+          # hostname. This is the production form of the /etc/hosts step the
+          # Compose stack asks a developer to take. /auth belongs to the
+          # gateway and is not shared.
+          - path: /idp
+            pathType: Prefix
+            backend: { service: { name: keycloak, port: { number: 8180 } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: web, port: { number: 8080 } } }

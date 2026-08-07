@@ -3024,3 +3024,568 @@ tbody tr:hover {
     break-inside: avoid;
   }
 }
+
+/* v0.4 · Health and Wellness refocus */
+.brand-lockup small {
+  display: block;
+  color: rgb(255 255 255 / 68%);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.kpi-summary-band {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(340px, 1.2fr);
+  margin-bottom: 14px;
+  background: #172231;
+  border: 1px solid #24364b;
+  border-left: 4px solid var(--brand);
+  border-radius: 4px;
+  color: #fff;
+}
+
+.kpi-summary-band > div {
+  min-height: 92px;
+  padding: 17px 20px;
+}
+
+.summary-score {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgb(255 255 255 / 14%);
+}
+
+.summary-score .summary-label,
+.summary-score small,
+.summary-source span {
+  color: rgb(255 255 255 / 68%);
+}
+
+.summary-score strong {
+  margin: 4px 0 2px;
+  font-size: 1rem;
+}
+
+.summary-score strong span {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 1.65rem;
+}
+
+.summary-score small,
+.summary-source span {
+  font-size: 0.7rem;
+}
+
+.summary-source {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-source div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-table-panel {
+  margin-top: 18px;
+}
+
+.kpi-table {
+  min-width: 980px;
+}
+
+.kpi-table th:nth-child(1) {
+  width: 30%;
+}
+
+.kpi-table th:nth-child(2) {
+  width: 18%;
+}
+
+.kpi-table th:nth-child(3),
+.kpi-table th:nth-child(4) {
+  width: 17%;
+}
+
+.kpi-table td {
+  vertical-align: top;
+}
+
+.kpi-table td:first-child .metric-id,
+.kpi-name,
+.kpi-table td:first-child small,
+.direction-label,
+.source-pending {
+  display: block;
+}
+
+.kpi-name {
+  margin: 4px 0;
+  font-size: 0.78rem;
+}
+
+.kpi-table td:first-child small,
+.kpi-value-cell small {
+  color: var(--ink-muted);
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.direction-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+  padding: 3px 6px;
+  color: #345471;
+  background: var(--blue-wash);
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.direction-higher {
+  color: #0b6653;
+  background: var(--ok-wash);
+}
+
+.kpi-value-cell .metric-value {
+  display: block;
+  margin: 0 0 7px;
+  font-size: 1.08rem;
+  letter-spacing: -0.02em;
+}
+
+.kpi-value-cell small {
+  display: block;
+  margin: -2px 0 6px;
+}
+
+.source-pending {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+  color: var(--caution);
+  font-size: 0.63rem;
+}
+
+.proposal-callout,
+.form-defect-callout,
+.visit-linked-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 13px 15px;
+  border: 1px solid;
+  border-radius: 4px;
+}
+
+.proposal-callout {
+  color: #315a7a;
+  background: var(--blue-wash);
+  border-color: #c8dceb;
+}
+
+.form-defect-callout {
+  margin-top: 18px;
+  color: var(--caution);
+  background: var(--caution-wash);
+  border-color: #ead4aa;
+}
+
+.proposal-callout > div,
+.form-defect-callout > div,
+.visit-linked-actions > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.proposal-callout strong,
+.form-defect-callout strong,
+.visit-linked-actions strong {
+  font-size: 0.78rem;
+}
+
+.proposal-callout span,
+.form-defect-callout span,
+.visit-linked-actions span {
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.proposal-chip,
+.form-defect-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 5px;
+  color: #245c85;
+  background: var(--blue-wash);
+  border: 1px solid #c5dceb;
+  border-radius: 999px;
+  font-size: 0.56rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.form-defect-tag {
+  color: var(--caution);
+  background: var(--caution-wash);
+  border-color: #ead4aa;
+}
+
+.reference-data-panel {
+  margin-top: 18px;
+}
+
+.reference-data-panel .panel-footnote {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 0;
+}
+
+.lab-request-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.lab-request-summary > div {
+  display: flex;
+  min-height: 70px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 15px;
+  border-right: 1px solid var(--rule);
+}
+
+.lab-request-summary > div:last-child {
+  border-right: 0;
+}
+
+.lab-request-summary span {
+  color: var(--ink-muted);
+  font-size: 0.65rem;
+}
+
+.lab-request-summary strong {
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+
+.compact-result-form > .field,
+.compact-result-form > .button,
+.authorisation-panel > .field,
+.authorisation-panel > .button,
+.referral-workflow-column .form-panel > .field,
+.referral-workflow-column .form-panel > .button,
+.referral-workflow-column .form-panel > .checkbox-line,
+.signoff-fieldset {
+  margin: 14px 20px 0;
+}
+
+.compact-result-form > .button,
+.authorisation-panel > .button,
+.referral-workflow-column .form-panel > .button {
+  margin-bottom: 20px;
+}
+
+.abnormal-warning {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 14px 20px 0;
+  padding: 9px 10px;
+  color: var(--breach);
+  background: var(--breach-wash);
+  border: 1px solid #efc2be;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+
+.visit-linked-actions {
+  justify-content: space-between;
+  color: #315a7a;
+  background: var(--blue-wash);
+  border-color: #c8dceb;
+}
+
+.form-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.referral-form {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.form-section + .form-section {
+  border-top: 8px solid var(--canvas);
+}
+
+.referral-form > .form-section > .field,
+.referral-form > .form-section > .choice-fieldset,
+.referral-form > .form-section > .vitals-summary,
+.referral-form > .form-section > .checkbox-line {
+  margin: 18px 20px;
+}
+
+.referral-vitals {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.checkbox-line {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  color: #394555;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.checkbox-line input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue);
+}
+
+.referral-lifecycle {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0 0 18px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  list-style: none;
+}
+
+.referral-lifecycle li {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--rule);
+  font-size: 0.7rem;
+}
+
+.referral-lifecycle li:last-child {
+  border-right: 0;
+}
+
+.referral-lifecycle li > span {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border: 1px solid var(--rule-strong);
+  border-radius: 50%;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.64rem;
+}
+
+.referral-lifecycle li.complete {
+  color: var(--ok);
+  background: var(--ok-wash);
+}
+
+.referral-lifecycle li.complete > span {
+  border-color: #84bdad;
+}
+
+.lifecycle-chip {
+  display: inline-flex;
+  padding: 3px 7px;
+  color: var(--blue);
+  background: var(--blue-wash);
+  border-radius: 3px;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.lifecycle-reviewed {
+  color: var(--ok);
+  background: var(--ok-wash);
+}
+
+.referral-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(310px, 0.6fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.referral-workflow-column {
+  display: grid;
+  gap: 18px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--rule);
+}
+
+.detail-grid > div {
+  min-height: 62px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.detail-grid dt {
+  margin-bottom: 4px;
+  color: var(--ink-muted);
+  font-size: 0.64rem;
+}
+
+.detail-grid dd {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.clinical-referral-panel .referral-vitals {
+  margin: 16px 0;
+}
+
+.form-defect-inline {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 9px 10px;
+  color: var(--caution);
+  background: var(--caution-wash);
+  font-size: 0.68rem;
+}
+
+.workflow-action-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.workflow-action-panel p {
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.complete-workflow {
+  color: var(--ok);
+  background: var(--ok-wash);
+  border-color: #b8ded5;
+}
+
+.minimum-disclosure-summary {
+  display: flex;
+  gap: 10px;
+  margin: 16px 20px;
+  padding: 12px;
+  color: #315a7a;
+  background: var(--blue-wash);
+  border: 1px solid #c8dceb;
+  border-radius: 3px;
+}
+
+.minimum-disclosure-summary dl {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin: 0;
+}
+
+.minimum-disclosure-summary dt {
+  color: var(--ink-muted);
+  font-size: 0.62rem;
+}
+
+.minimum-disclosure-summary dd {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.signoff-fieldset {
+  padding: 12px;
+  border: 1px solid var(--rule);
+}
+
+.signoff-fieldset legend {
+  padding: 0 5px;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.signoff-fieldset .field + .field {
+  margin-top: 10px;
+}
+
+.referral-section-panel {
+  margin-top: 18px;
+}
+
+@media (max-width: 1050px) {
+  .kpi-summary-band,
+  .entry-layout,
+  .referral-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-score {
+    border-right: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+  }
+
+  .referral-vitals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .kpi-summary-band,
+  .lab-request-summary,
+  .referral-lifecycle,
+  .detail-grid,
+  .minimum-disclosure-summary dl,
+  .form-grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .lab-request-summary > div,
+  .referral-lifecycle li {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .visit-linked-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .visit-linked-actions .button-group {
+    flex-direction: column;
+  }
+}

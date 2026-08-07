@@ -1,11 +1,13 @@
 import {
   ArrowLeft,
   BriefcaseMedical,
+  Beaker,
   CalendarDays,
   Clock3,
   FileCheck2,
   HeartPulse,
   Plus,
+  Send,
   UserRound,
 } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
@@ -126,6 +128,23 @@ export function VisitDetailPage() {
           <FileCheck2 size={18} aria-hidden="true" />
           <span>Record state</span>
           <strong>{visit.state === "signed" ? "Signed" : "Draft"}</strong>
+        </div>
+      </section>
+
+      <section className="visit-linked-actions" aria-label="Actions from this visit">
+        <div>
+          <strong>Continue this clinical workflow</strong>
+          <span>Patient identity and recorded vitals are carried forward from this visit.</span>
+        </div>
+        <div className="button-group">
+          <AppLink className="button button-secondary" to={`/laboratory/new?visit=${visit.id}`}>
+            <Beaker size={17} aria-hidden="true" />
+            Raise laboratory request
+          </AppLink>
+          <AppLink className="button button-primary" to={`/referrals/new?visit=${visit.id}`}>
+            <Send size={17} aria-hidden="true" />
+            Raise medical referral
+          </AppLink>
         </div>
       </section>
 

@@ -1,15 +1,15 @@
 import {
   Activity,
+  Beaker,
   ClipboardCheck,
   Factory,
   FileHeart,
   Gauge,
   HeartPulse,
-  Leaf,
   LogOut,
   RefreshCcw,
   ShieldCheck,
-  ShieldPlus,
+  Stethoscope,
   UserRound,
   Users,
   type LucideIcon,
@@ -22,14 +22,10 @@ import { useDemoStore } from "../store/DemoStore";
 const healthItems = [
   { to: "/patients", label: "Patients", icon: Users, officerOnly: true },
   { to: "/patient-visits", label: "Patient visits", icon: FileHeart, officerOnly: true },
+  { to: "/laboratory", label: "Laboratory testing", icon: Beaker, officerOnly: true },
+  { to: "/referrals", label: "Medical referrals", icon: Stethoscope, officerOnly: true },
   { to: "/ergonomics-wellness", label: "Ergonomics & wellness", icon: Activity },
   { to: "/industrial-hygiene", label: "Industrial hygiene", icon: Factory },
-];
-
-const unitItems = [
-  { to: "/workplace-safety", label: "Workplace safety", icon: ShieldPlus },
-  { to: "/environment-sustainability", label: "Environment & sustainability", icon: Leaf },
-  { to: "/quality-inspection-testing", label: "Quality inspection & testing", icon: ClipboardCheck },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -39,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isOfficer = state.role === "health-wellness-officer";
 
   const handleReset = () => {
-    if (window.confirm("Reset browser-local edits and restore the v0.3 synthetic data?")) {
+    if (window.confirm("Reset browser-local edits and restore the v0.4 synthetic data?")) {
       reset();
       navigate("/");
     }
@@ -55,7 +51,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="sidebar">
         <div className="brand-lockup" aria-label="Kiira Motors Corporation">
           <div className="brand-logo-image" aria-hidden="true" />
-          <span>QHSE Management System</span>
+          <span>Health & Wellness Dashboard</span>
+          <small>Proposed name</small>
         </div>
         <nav aria-label="Primary">
           <div className="nav-label">Overview</div>
@@ -72,11 +69,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 .map((item) => (
                   <NavItem key={item.to} to={item.to} label={item.label} icon={item.icon} />
                 ))}
-
-              <div className="nav-label">QHSE units</div>
-              {unitItems.map((item) => (
-                <NavItem key={item.to} {...item} />
-              ))}
             </>
           )}
         </nav>
@@ -88,8 +80,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               {isOfficer
                 ? "Clinical detail stays inside Health and Wellness."
                 : isDirector
-                  ? "Executive summaries only; no unit or entry screens."
-                  : "Unit drilldowns are aggregate and suppress small groups."}
+                  ? "Executive summary only; no clinical or entry screens."
+                  : "Operational summaries only; no individual clinical records."}
             </span>
           </div>
         </div>
@@ -99,8 +91,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="topbar">
           <div className="topbar-product">
             <HeartPulse size={22} aria-hidden="true" />
-            <span>QHSE Management System</span>
-            <span className="prototype-tag">Prototype v0.3</span>
+            <span>Health & Wellness Dashboard</span>
+            <span className="prototype-tag">Proposed name · Prototype v0.4</span>
           </div>
           <div className="topbar-actions">
             <div className="signed-in-user">

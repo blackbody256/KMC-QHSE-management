@@ -9,19 +9,20 @@ import {
 } from "react";
 import { authenticateDemoAccount } from "../data/accounts";
 import { createSeedState } from "../data/seed";
-import { canAttestSafetyPeriod } from "../lib/calculations";
 import type {
   DemoState,
   DemoUser,
-  EnvironmentalReading,
   ErgonomicAssessment,
+  IndustrialHygieneReading,
+  LabTestRequest,
+  LabTestResult,
+  MedicalReferral,
   MonthlyReturn,
   Patient,
   PatientVisit,
-  SafetyIncident,
 } from "../types";
 
-const STORAGE_KEY = "kmc-qhse-demo-v2";
+const STORAGE_KEY = "kmc-health-wellness-demo-v3";
 
 interface DemoStoreValue {
   state: DemoState;
@@ -32,10 +33,11 @@ interface DemoStoreValue {
   addPatient: (patient: Patient) => void;
   upsertVisit: (visit: PatientVisit) => void;
   upsertMonthlyReturn: (entry: MonthlyReturn) => void;
-  addEnvironmentalReading: (entry: EnvironmentalReading) => void;
+  addIndustrialHygieneReading: (entry: IndustrialHygieneReading) => void;
   addErgonomicAssessment: (entry: ErgonomicAssessment) => void;
-  upsertSafetyIncident: (entry: SafetyIncident) => void;
-  attestSafetyPeriod: (period: string, note: string) => string | null;
+  upsertLabRequest: (entry: LabTestRequest) => void;
+  addLabResult: (entry: LabTestResult) => void;
+  upsertReferral: (entry: MedicalReferral) => void;
 }
 
 const DemoStoreContext = createContext<DemoStoreValue | null>(null);
@@ -45,7 +47,7 @@ const readInitialState = (): DemoState => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return createSeedState();
     const parsed = JSON.parse(raw) as DemoState;
-    return parsed.version === 2 ? parsed : createSeedState();
+    return parsed.version === 3 ? parsed : createSeedState();
   } catch {
     return createSeedState();
   }
@@ -111,12 +113,12 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [canEdit],
   );
 
-  const addEnvironmentalReading = useCallback(
-    (entry: EnvironmentalReading) => {
+  const addIndustrialHygieneReading = useCallback(
+    (entry: IndustrialHygieneReading) => {
       if (!canEdit) return;
       setState((current) => ({
         ...current,
-        environmentalReadings: [entry, ...current.environmentalReadings],
+        industrialHygieneReadings: [entry, ...current.industrialHygieneReadings],
       }));
     },
     [canEdit],
@@ -133,41 +135,40 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [canEdit],
   );
 
-  const upsertSafetyIncident = useCallback(
-    (entry: SafetyIncident) => {
+  const upsertLabRequest = useCallback(
+    (entry: LabTestRequest) => {
       if (!canEdit) return;
       setState((current) => ({
         ...current,
-        safetyIncidents: [
+        labRequests: [
           entry,
-          ...current.safetyIncidents.filter((incident) => incident.id !== entry.id),
+          ...current.labRequests.filter((request) => request.id !== entry.id),
         ],
       }));
     },
     [canEdit],
   );
 
-  const attestSafetyPeriod = useCallback(
-    (period: string, note: string) => {
-      if (!canEdit || !currentUser) return "Only the Health and Wellness Officer can attest a period.";
-      const check = canAttestSafetyPeriod(state, period);
-      if (!check.allowed) return check.reason;
+  const addLabResult = useCallback(
+    (entry: LabTestResult) => {
+      if (!canEdit) return;
       setState((current) => ({
         ...current,
-        safetyAttestations: [
-          ...current.safetyAttestations.filter((entry) => entry.period !== period),
-          {
-            period,
-            state: "attested",
-            attestedBy: `${currentUser.name} · ${currentUser.title}`,
-            attestedAt: new Date().toISOString(),
-            note: note.trim() || "All known events for the period have been entered.",
-          },
-        ],
+        labResults: [entry, ...current.labResults],
       }));
-      return null;
     },
-    [canEdit, currentUser, state],
+    [canEdit],
+  );
+
+  const upsertReferral = useCallback(
+    (entry: MedicalReferral) => {
+      if (!canEdit) return;
+      setState((current) => ({
+        ...current,
+        referrals: [entry, ...current.referrals.filter((referral) => referral.id !== entry.id)],
+      }));
+    },
+    [canEdit],
   );
 
   const value = useMemo(
@@ -180,10 +181,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       addPatient,
       upsertVisit,
       upsertMonthlyReturn,
-      addEnvironmentalReading,
+      addIndustrialHygieneReading,
       addErgonomicAssessment,
-      upsertSafetyIncident,
-      attestSafetyPeriod,
+      upsertLabRequest,
+      addLabResult,
+      upsertReferral,
     }),
     [
       state,
@@ -194,10 +196,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       addPatient,
       upsertVisit,
       upsertMonthlyReturn,
-      addEnvironmentalReading,
+      addIndustrialHygieneReading,
       addErgonomicAssessment,
-      upsertSafetyIncident,
-      attestSafetyPeriod,
+      upsertLabRequest,
+      addLabResult,
+      upsertReferral,
     ],
   );
 

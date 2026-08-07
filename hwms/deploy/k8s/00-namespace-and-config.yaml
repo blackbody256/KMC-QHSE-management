@@ -1,0 +1,73 @@
+# Namespace, configuration and the secret contract.
+#
+# These manifests target k3s on KMC infrastructure. They are written now, in
+# parallel with the Compose stack, so that moving to production is a deployment
+# change rather than a rewrite. Item P-01 in the production build plan remains
+# open: if ICT chooses Compose on virtual machines instead, this directory is
+# discarded and nothing else changes.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hwms
+  labels:
+    app.kubernetes.io/part-of: hwms
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hwms-config
+  namespace: hwms
+data:
+  APP_BASE_URL: "https://qhse.kiiramotors.local"
+  OIDC_ISSUER: "https://qhse.kiiramotors.local/idp/realms/hwms"
+  # Keycloak is reached inside the cluster on its service name while the issuer
+  # above is the address the browser used. Where those differ, discovery runs
+  # against the internal address and validation still requires the external
+  # issuer.
+  OIDC_DISCOVERY_URL: "http://keycloak:8180/idp/realms/hwms"
+  OIDC_AUDIENCE: "account"
+  KEYCLOAK_URL: "http://keycloak:8180/idp"
+  KEYCLOAK_REALM: "hwms"
+  IDENTITY_SERVICE_URL: "http://identity:8082"
+  SESSION_IDLE_TIMEOUT: "30m"
+  COOKIE_SECURE: "true"
+  LOG_LEVEL: "info"
+---
+# The secret is NOT held in this repository. Create it from a KMC-controlled
+# source — sealed-secrets, Vault, or `kubectl create secret` run by ICT — using
+# the keys below. The development values in docker-compose.yml are development
+# values and must never reach a cluster.
+#
+#   kubectl -n hwms create secret generic hwms-secrets \
+#     --from-literal=POSTGRES_PASSWORD=... \
+#     --from-literal=GATEWAY_CLIENT_SECRET=... \
+#     --from-literal=IDENTITY_CLIENT_SECRET=... \
+#     --from-literal=KEYCLOAK_ADMIN_PASSWORD=...
+#
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hwms-secrets
+  namespace: hwms
+  annotations:
+    hwms.kiiramotors.com/contract: "keys required by the deployments; values supplied by ICT"
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "replace-me"
+  GATEWAY_CLIENT_SECRET: "replace-me"
+  IDENTITY_CLIENT_SECRET: "replace-me"
+  KEYCLOAK_ADMIN_PASSWORD: "replace-me"
+---
+# The clinical service, when it is built, is denied network access to
+# everything except its own database. That policy belongs here from the start
+# so it is not remembered late: it is the deployment-level enforcement of
+# ADR-03, and it should exist before there is a clinical record to protect.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: hwms
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
