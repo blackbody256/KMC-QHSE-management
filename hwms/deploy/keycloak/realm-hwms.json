@@ -55,14 +55,14 @@
       "serviceAccountsEnabled": false,
       "secret": "development-only-gateway-secret-rotate-me",
       "redirectUris": [
-        "http://localhost:8080/auth/callback"
+        "http://localhost:8090/auth/callback"
       ],
       "webOrigins": [
-        "http://localhost:8080"
+        "http://localhost:8090"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:8080/login"
+        "post.logout.redirect.uris": "http://localhost:8090/login"
       },
       "defaultClientScopes": [
         "web-origins",

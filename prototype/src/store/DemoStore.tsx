@@ -14,15 +14,14 @@ import type {
   DemoUser,
   ErgonomicAssessment,
   IndustrialHygieneReading,
-  LabTestRequest,
-  LabTestResult,
+  LabRequisition,
   MedicalReferral,
   MonthlyReturn,
   Patient,
   PatientVisit,
 } from "../types";
 
-const STORAGE_KEY = "kmc-health-wellness-demo-v3";
+const STORAGE_KEY = "kmc-health-wellness-demo-v4";
 
 interface DemoStoreValue {
   state: DemoState;
@@ -35,8 +34,7 @@ interface DemoStoreValue {
   upsertMonthlyReturn: (entry: MonthlyReturn) => void;
   addIndustrialHygieneReading: (entry: IndustrialHygieneReading) => void;
   addErgonomicAssessment: (entry: ErgonomicAssessment) => void;
-  upsertLabRequest: (entry: LabTestRequest) => void;
-  addLabResult: (entry: LabTestResult) => void;
+  upsertLabRequisition: (entry: LabRequisition) => void;
   upsertReferral: (entry: MedicalReferral) => void;
 }
 
@@ -47,7 +45,7 @@ const readInitialState = (): DemoState => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return createSeedState();
     const parsed = JSON.parse(raw) as DemoState;
-    return parsed.version === 3 ? parsed : createSeedState();
+    return parsed.version === 4 ? parsed : createSeedState();
   } catch {
     return createSeedState();
   }
@@ -135,26 +133,15 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [canEdit],
   );
 
-  const upsertLabRequest = useCallback(
-    (entry: LabTestRequest) => {
+  const upsertLabRequisition = useCallback(
+    (entry: LabRequisition) => {
       if (!canEdit) return;
       setState((current) => ({
         ...current,
-        labRequests: [
+        labRequisitions: [
           entry,
-          ...current.labRequests.filter((request) => request.id !== entry.id),
+          ...current.labRequisitions.filter((request) => request.id !== entry.id),
         ],
-      }));
-    },
-    [canEdit],
-  );
-
-  const addLabResult = useCallback(
-    (entry: LabTestResult) => {
-      if (!canEdit) return;
-      setState((current) => ({
-        ...current,
-        labResults: [entry, ...current.labResults],
       }));
     },
     [canEdit],
@@ -183,8 +170,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       upsertMonthlyReturn,
       addIndustrialHygieneReading,
       addErgonomicAssessment,
-      upsertLabRequest,
-      addLabResult,
+      upsertLabRequisition,
+
       upsertReferral,
     }),
     [
@@ -198,8 +185,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       upsertMonthlyReturn,
       addIndustrialHygieneReading,
       addErgonomicAssessment,
-      upsertLabRequest,
-      addLabResult,
+      upsertLabRequisition,
+
       upsertReferral,
     ],
   );

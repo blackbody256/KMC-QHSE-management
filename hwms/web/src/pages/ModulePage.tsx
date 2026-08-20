@@ -17,31 +17,33 @@ interface ModuleContent {
  * a stakeholder to assume.
  */
 const content: Record<string, ModuleContent> = {
-  "/health-wellness/occupational-health": {
-    phase: "the clinical phase",
+  "/laboratory": {
+    phase: "the next clinical increment",
+    awaitingConfirmationBy: "the laboratory staff, who are supplying the actual forms",
     plannedRecords: [
-      "Patient registry, with employee number optional so that nobody is turned away for want of an identifier",
-      "Patient visits, section by section, following the order of the paper form",
-      "Section state: not recorded, partial, complete, or not clinically indicated",
-      "Draft and signed states, with correction by appended amendment only",
-      "Medical surveillance planning and completed assessments",
-      "Occupational disease cases, carrying department and exposure but no patient identity",
-      "Fitness for work outcomes, carrying no diagnosis",
+      "Test requests raised from a visit, with specimen type, tests requested and clinical indication",
+      "Whether the request is routine or urgent",
+      "Surveillance context: pre-employment, periodic, exit, or incident — linking a test to the surveillance programme",
+      "Results, one row per analyte, with value, unit and verifying practitioner",
+      "The reference range applied, held as effective-dated reference data and stored against the result",
+      "Abnormality flagged against that range, written once and never recomputed when a range is later revised",
     ],
   },
-  "/health-wellness/ergonomics": {
-    phase: "the ergonomics phase",
+  "/referrals": {
+    phase: "the next clinical increment",
     plannedRecords: [
-      "Workstation register, with office and industrial types recorded separately",
-      "Assessments with a compliant, partially compliant or non-compliant outcome",
-      "Free-text findings against each assessment",
-      "Corrective actions with owner, due date, evidence and approval",
-      "Overdue flagging against the due date",
-      "Planned against completed assessments, reported separately from outcomes",
+      "Referral on form KMC.DQHSE.02/26-FM004, pre-filled from the visit rather than re-keyed",
+      "Clinical features, findings, general examination and past medical history as the form sets them out",
+      "Occupational consideration and the reason for referral",
+      "Infirmary clearance, then authorisation, then issue",
+      "External facility feedback: diagnosis, treatment, follow-up and recommended sick leave",
+      "Infirmary follow-up review closing the loop",
+      "Download as a PDF reproducing the printed form",
+      "Recommended sick leave feeding health-related absenteeism, so the referral is part of the system rather than a document store",
     ],
   },
-  "/health-wellness/industrial-hygiene": {
-    phase: "the environment phase",
+  "/industrial-hygiene": {
+    phase: "the operations increment",
     plannedRecords: [
       "Monitoring plan by location, parameter and period",
       "Monitoring events, including events recorded as not performed with a reason",
@@ -51,53 +53,23 @@ const content: Record<string, ModuleContent> = {
       "Instrument identifier against every reading, for calibration traceability",
     ],
   },
-  "/workplace-safety": {
-    phase: "the safety phase",
+  "/ergonomics-wellness": {
+    phase: "the operations increment",
     plannedRecords: [
-      "Incident register with occurrence and report times, location, activity and description",
-      "Event classification following the Occupational Safety and Health Act, 2006",
-      "Severity, from fatality through first aid only to no injury",
-      "Counts of people affected, kept distinct from the count of events",
-      "Recordability as a determination by a named officer, with its basis — never computed from a rule KMC has not approved",
-      "Whether an investigation is required, and why",
-      "Investigations with method, root causes, and corrective actions",
-      "Monthly attestation, so that a reported zero means nothing happened rather than nothing was entered",
-    ],
-  },
-  "/environment": {
-    phase: "a later release",
-    awaitingConfirmationBy: "the environment function",
-    plannedRecords: [
-      "Ambient monitoring, sharing one register with industrial hygiene and separated by context",
-      "Environmental permits and consents, with renewal tracking",
-      "Waste streams, quantities, disposal route and licensed handler",
-      "Effluent and water abstraction against consent limits",
-      "Emissions to air, by point and by period",
-      "Energy consumption and renewable share",
-      "Greenhouse gas reporting, if it is an obligation rather than an intention",
-      "Environmental incidents and spills, reusing the incident register",
-    ],
-  },
-  "/quality": {
-    phase: "a later release",
-    awaitingConfirmationBy: "the quality function",
-    plannedRecords: [
-      "Incoming inspection against supplier and part",
-      "In-process inspection at control-plan points",
-      "Final inspection and pre-delivery checks",
-      "Test requests and results",
-      "Non-conformances with disposition: rework, repair, scrap or concession",
-      "Corrective and preventive action, reusing the shared action model",
-      "Measurement equipment and calibration due dates",
-      "Supplier quality, audits and scorecards",
+      "Workstation register, with office and industrial types recorded separately",
+      "Assessments with a compliant, partially compliant or non-compliant outcome",
+      "Free-text findings against each assessment",
+      "Corrective actions with owner, due date, evidence and approval",
+      "Overdue flagging against the due date",
+      "Planned against completed assessments, reported separately from outcomes",
     ],
   },
   "/monthly-returns": {
-    phase: "the metrics phase",
+    phase: "the metrics increment",
     plannedRecords: [
       "Health-related lost days and month-end headcount, from the Human Resource portal",
       "Employees scheduled for surveillance and employees assessed",
-      "Hours worked, optional and clearly labelled, pending confirmation that HR can supply it",
+      "Fatalities, recordable incidents, recordable injuries and reportable near misses",
       "The stated source of each figure, the entering user and the entry date",
       "The computed rate shown live during entry, so an implausible figure is visible immediately",
       "Correction of a submitted return, preserving the prior value and the reason",

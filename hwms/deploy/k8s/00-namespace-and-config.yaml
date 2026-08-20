@@ -29,6 +29,7 @@ data:
   KEYCLOAK_URL: "http://keycloak:8180/idp"
   KEYCLOAK_REALM: "hwms"
   IDENTITY_SERVICE_URL: "http://identity:8082"
+  CLINICAL_SERVICE_URL: "http://clinical:8083"
   SESSION_IDLE_TIMEOUT: "30m"
   COOKIE_SECURE: "true"
   LOG_LEVEL: "info"
@@ -54,6 +55,9 @@ metadata:
 type: Opaque
 stringData:
   POSTGRES_PASSWORD: "replace-me"
+  # Distinct from POSTGRES_PASSWORD, always. Reusing it would collapse the
+  # separation the clinical instance exists to provide.
+  CLINICAL_DB_PASSWORD: "replace-me"
   GATEWAY_CLIENT_SECRET: "replace-me"
   IDENTITY_CLIENT_SECRET: "replace-me"
   KEYCLOAK_ADMIN_PASSWORD: "replace-me"

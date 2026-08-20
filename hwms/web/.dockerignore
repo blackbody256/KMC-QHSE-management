@@ -1,8 +1,6 @@
-# Keep the build context small. node_modules is reinstalled from the lockfile
-# inside the image, and dist is rebuilt there — shipping either wastes time on
-# every build and risks the image disagreeing with the lockfile.
+# Keep the build context small. node_modules is never shipped. dist IS shipped,
+# because the interface is built on the host and copied in, see the Dockerfile.
 node_modules
-dist
 .env
 .env.*
 *.log

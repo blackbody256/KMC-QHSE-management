@@ -59,6 +59,76 @@ spec:
           requests:
             storage: 20Gi
 ---
+# The clinical database. A separate instance with separate credentials, per
+# DR-03 — not a separate database on the instance above. The reason for the
+# separation is legal rather than architectural, and sharing an instance would
+# leave one credential leak between an unrelated service and a patient record.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-clinical
+  namespace: hwms
+spec:
+  selector:
+    app: postgres-clinical
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-clinical
+  namespace: hwms
+spec:
+  serviceName: postgres-clinical
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-clinical
+  template:
+    metadata:
+      labels:
+        app: postgres-clinical
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_USER
+              value: hwms_clinical
+            - name: POSTGRES_DB
+              value: clinical
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: CLINICAL_DB_PASSWORD }
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "hwms_clinical"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            # Encrypted at rest with a key distinct from the other contexts,
+            # per NFR-SEC-02. The storage class must provide that; a default
+            # class that does not is a finding, not a detail.
+            storage: 20Gi
+---
 apiVersion: v1
 kind: Service
 metadata:

@@ -32,7 +32,7 @@ npm run build
 2. Confirm every KPI has a reporting-month value, a year-to-date average or “Incomplete history”, a glyph-and-word status, target, direction and provenance.
 3. Verify Reportable Near Misses is labelled “Higher is better” with target `≥ 200`.
 4. Open Monthly returns and confirm safety figures are attributed values with an owner-pending note, not records from a local incident register.
-5. Sign in as the Officer, open a visit and raise a laboratory request. Enter an abnormal result and confirm the warning does not block saving.
+5. Sign in as the Officer, open a visit and raise a laboratory requisition on KMC.DQHSE.05/26-FM008. Tick investigations, confirm the fasting note appears against FBS, record results and a specimen, and download the form PDF.
 6. Raise a referral from a visit, confirm the vitals are pre-filled, and move it through drafted, authorised, issued, returned and reviewed.
 7. Enter recommended sick leave in returned feedback and verify the linked days appear in Monthly returns and Health-Related Absenteeism.
 8. Download the clinical referral PDF and verify the form number, confidentiality declaration, duplicate Section E labels and printed “KMC infirmary officer” wording.
@@ -42,8 +42,8 @@ npm run build
 
 - Safety figures remain visible, but their authoritative owner is awaiting Benard’s confirmation. There is no parallel incident register.
 - Management authorisation uses a proposed minimum-disclosure summary. Management clinical access is not granted.
-- The generic laboratory field set and ranges are proposals awaiting the actual KMC laboratory forms.
-- KPI targets, hygiene limits and laboratory ranges are represented as effective-dated reference records. Results/readings snapshot what was applied.
+- The laboratory module reproduces KMC.DQHSE.05/26-FM008: seven investigations in four groups. The form carries no units and no reference ranges, so results are recorded as the laboratory reported them and nothing is flagged abnormal. Whether the laboratory wants structured ranges is an open question for them.
+- KPI targets and hygiene limits are effective-dated reference records, and readings snapshot the limit applied. Laboratory results carry no such snapshot because the form defines no ranges to snapshot.
 - Missing values display as “No data”; synthetic records are labelled; abnormal clinical values warn and never block.
 - Browser data is stored under `kmc-health-wellness-demo-v3`.
 

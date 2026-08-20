@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -102,18 +103,28 @@ func (g *gateway) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var claims struct {
-		Subject           string `json:"sub"`
-		PreferredUsername string `json:"preferred_username"`
-		Name              string `json:"name"`
-		Email             string `json:"email"`
-		RealmAccess       struct {
-			Roles []string `json:"roles"`
-		} `json:"realm_access"`
-	}
+	var claims identityClaims
 	if err := idToken.Claims(&claims); err != nil {
 		http.Redirect(w, r, g.appBaseURL+"/login?error=invalid_token", http.StatusFound)
 		return
+	}
+
+	// Roles come from the access token, not the identity token.
+	//
+	// Keycloak places realm roles in realm_access on the access token and, by
+	// default, leaves them off the identity token entirely. Reading them from
+	// the identity token yields an empty list, which signs a user in with no
+	// role and no navigation — the failure this once produced in the field.
+	//
+	// Taking them from the access token also keeps the gateway's view of a
+	// caller identical to what the services downstream enforce on, since that
+	// is the token forwarded to them. Two sources for one answer would
+	// eventually disagree.
+	roles := g.rolesFromAccessToken(r.Context(), token.AccessToken)
+	if len(roles) == 0 {
+		// Belt and braces: a realm configured to publish roles on the identity
+		// token instead should still work.
+		roles = filterHWMSRoles(claims.RealmAccess.Roles)
 	}
 
 	subject := auth.Subject{
@@ -121,7 +132,17 @@ func (g *gateway) handleCallback(w http.ResponseWriter, r *http.Request) {
 		Username: claims.PreferredUsername,
 		Name:     claims.Name,
 		Email:    claims.Email,
-		Roles:    filterHWMSRoles(claims.RealmAccess.Roles),
+		Roles:    roles,
+	}
+
+	if len(subject.Roles) == 0 {
+		// Signing someone in with nothing to open is worse than refusing:
+		// they get an empty application and no idea why. Say so, and name who
+		// can fix it.
+		g.log.Warn("sign-in with no role assigned",
+			slog.String("username", subject.Username))
+		http.Redirect(w, r, g.appBaseURL+"/login?error=no_role", http.StatusFound)
+		return
 	}
 
 	id, err := g.sessions.put(&session{Subject: subject, Token: token, IDToken: rawID})
@@ -215,6 +236,43 @@ func (g *gateway) accessToken(r *http.Request, sess *session) (string, error) {
 		sess.Token = token
 	}
 	return token.AccessToken, nil
+}
+
+// identityClaims is the subset of a Keycloak token this gateway reads.
+type identityClaims struct {
+	Subject           string `json:"sub"`
+	PreferredUsername string `json:"preferred_username"`
+	Name              string `json:"name"`
+	Email             string `json:"email"`
+	RealmAccess       struct {
+		Roles []string `json:"roles"`
+	} `json:"realm_access"`
+}
+
+// rolesFromAccessToken verifies the access token and returns the roles this
+// system recognises.
+//
+// The token is verified rather than merely decoded. It arrived over the back
+// channel so its integrity is already assured by transport, but verifying the
+// signature and issuer costs nothing and means this code path cannot become a
+// place where an unverified token is trusted. The audience check is skipped
+// deliberately: an access token's audience is the resource server, not this
+// client.
+func (g *gateway) rolesFromAccessToken(ctx context.Context, raw string) []string {
+	if raw == "" || g.accessVerifier == nil {
+		return nil
+	}
+	token, err := g.accessVerifier.Verify(ctx, raw)
+	if err != nil {
+		g.log.Warn("access token could not be verified for roles",
+			slog.String("error", err.Error()))
+		return nil
+	}
+	var claims identityClaims
+	if err := token.Claims(&claims); err != nil {
+		return nil
+	}
+	return filterHWMSRoles(claims.RealmAccess.Roles)
 }
 
 // filterHWMSRoles drops the realm's default roles so that the application sees

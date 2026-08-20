@@ -9,6 +9,11 @@ import type { Role } from "./session";
  * it. Two lists would eventually disagree, and the one that disagreed silently
  * would be the one governing access.
  *
+ * The structure follows the prototype the client approved: the Health and
+ * Wellness division and its three units. Quality Inspection and Environment
+ * and Sustainability were removed when the client established that those
+ * divisions already run their own systems.
+ *
  * Items are hidden entirely, never disabled, when a role has no access. A
  * disabled control tells someone there is something they are not allowed to
  * do, which invites a conversation about being allowed to do it.
@@ -22,8 +27,9 @@ export interface NavItem {
   roles: Role[];
   /** Roles that see the route without any entry, approval or edit control. */
   readOnlyFor?: Role[];
-  /** Short description used on the module scaffolds. */
+  /** Short description used on page headers and module scaffolds. */
   summary?: string;
+  /** Routes reachable from this item but not shown in the rail. */
   children?: NavItem[];
 }
 
@@ -36,6 +42,17 @@ const officer: Role = "hwms-officer";
 const manager: Role = "hwms-manager";
 const director: Role = "hwms-director";
 
+/**
+ * Clinical routes. Individual clinical records are open to the Health and
+ * Wellness Officer alone — not the manager, not the director, not an
+ * administrator. This is the rule the whole access design exists to protect,
+ * and it is enforced again at the service layer and proved by test.
+ */
+const clinical: Role[] = [officer];
+
+/** Operational routes: the officer enters, the manager reviews. */
+const operational: Role[] = [officer, manager];
+
 export const navigation: NavGroup[] = [
   {
     label: null,
@@ -46,86 +63,89 @@ export const navigation: NavGroup[] = [
         icon: "dashboard",
         roles: [officer, manager, director],
         summary:
-          "Divisional performance against target, by reporting period, with the provenance of every figure.",
+          "Occupational health and safety performance for the reporting month and the year to date, with the provenance of every figure.",
       },
     ],
   },
   {
-    label: "Health and wellness",
+    label: "Occupational health",
     items: [
       {
-        path: "/health-wellness/occupational-health",
-        label: "Occupational health",
+        path: "/patients",
+        label: "Patients",
         icon: "clinical_notes",
-        roles: [officer],
+        roles: clinical,
         summary:
-          "Patient registry, visits, surveillance and occupational disease cases. Individual records are accessible to the Health and Wellness Officer only.",
+          "The registry of everyone eligible to attend. Open a patient to see their whole history in one place. Employee number is optional, so nobody is turned away for want of an identifier.",
+        children: [
+          { path: "/patients/new", label: "Register patient", icon: "clinical_notes", roles: clinical },
+          { path: "/patients/record", label: "Patient record", icon: "clinical_notes", roles: clinical },
+        ],
       },
       {
-        path: "/health-wellness/ergonomics",
+        path: "/patient-visits",
+        label: "Patient visits",
+        icon: "assignment",
+        roles: clinical,
+        summary:
+          "Clinic attendances, section by section, following the order of the paper form. Signing locks the record; correction is by appended amendment.",
+        children: [
+          { path: "/patient-visits/new", label: "Record visit", icon: "assignment", roles: clinical },
+          { path: "/patient-visits/details", label: "Visit detail", icon: "assignment", roles: clinical },
+        ],
+      },
+      {
+        path: "/laboratory",
+        label: "Laboratory",
+        icon: "science",
+        roles: clinical,
+        summary:
+          "Requisitions on KMC.DQHSE.05/26-FM008, raised from a visit. Results are recorded as the laboratory reported them; the form defines no reference ranges, so nothing is flagged abnormal.",
+        children: [
+          { path: "/laboratory/new", label: "New request", icon: "science", roles: clinical },
+          { path: "/laboratory/details", label: "Request detail", icon: "science", roles: clinical },
+        ],
+      },
+      {
+        path: "/referrals",
+        label: "Referrals",
+        icon: "forward_to_inbox",
+        roles: clinical,
+        summary:
+          "Referral to an external facility on form KMC.DQHSE.02/26-FM004, through its lifecycle from drafted to reviewed, downloadable as a PDF.",
+        children: [
+          { path: "/referrals/new", label: "New referral", icon: "forward_to_inbox", roles: clinical },
+          { path: "/referrals/details", label: "Referral detail", icon: "forward_to_inbox", roles: clinical },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      {
+        path: "/industrial-hygiene",
+        label: "Industrial hygiene",
+        icon: "monitor_heart",
+        roles: operational,
+        readOnlyFor: [manager],
+        summary:
+          "Occupational exposure and indoor workplace readings, evaluated against the standard in force on the date of the reading.",
+      },
+      {
+        path: "/ergonomics-wellness",
         label: "Ergonomics and wellness",
         icon: "accessibility_new",
-        roles: [officer, manager],
+        roles: operational,
         readOnlyFor: [manager],
         summary:
           "Workstation assessments with a compliant, partially compliant or non-compliant outcome, and the corrective actions raised from them.",
       },
       {
-        path: "/health-wellness/industrial-hygiene",
-        label: "Industrial hygiene",
-        icon: "monitor_heart",
-        roles: [officer, manager],
-        readOnlyFor: [manager],
-        summary:
-          "Occupational exposure and indoor workplace readings from the shared monitoring register, evaluated against the standard in force on the date of the reading.",
-      },
-    ],
-  },
-  {
-    label: "Workplace safety",
-    items: [
-      {
-        path: "/workplace-safety",
-        label: "Incidents and investigations",
-        icon: "report",
-        roles: [officer, manager],
-        readOnlyFor: [manager],
-        summary:
-          "Incident register, severity and recordability determination, investigations and corrective actions, and the monthly attestation that makes a zero defensible.",
-      },
-    ],
-  },
-  {
-    label: "Environment and quality",
-    items: [
-      {
-        path: "/environment",
-        label: "Environment and sustainability",
-        icon: "eco",
-        roles: [officer, manager],
-        readOnlyFor: [manager],
-        summary:
-          "Ambient monitoring, permits and consents, waste, water, emissions and energy. Scope is a benchmark proposal awaiting confirmation by the unit owner.",
-      },
-      {
-        path: "/quality",
-        label: "Quality inspection and testing",
-        icon: "fact_check",
-        roles: [officer, manager],
-        readOnlyFor: [manager],
-        summary:
-          "Incoming, in-process and final inspection, test results, non-conformity and calibration. Scope is a benchmark proposal awaiting confirmation by the unit owner.",
-      },
-    ],
-  },
-  {
-    label: "Reporting",
-    items: [
-      {
         path: "/monthly-returns",
         label: "Monthly returns",
-        icon: "assignment",
-        roles: [officer, manager],
+        icon: "calendar_month",
+        roles: operational,
         readOnlyFor: [manager],
         summary:
           "Figures sourced outside this system, entered once a month with their source, entering user and date recorded against them.",
@@ -147,7 +167,7 @@ export const navigation: NavGroup[] = [
   },
 ];
 
-/** Every route in the table, flattened. */
+/** Every route in the table, including those not shown in the rail. */
 export const allRoutes: NavItem[] = navigation.flatMap((group) =>
   group.items.flatMap((item) => [item, ...(item.children ?? [])]),
 );
@@ -164,7 +184,7 @@ export function isReadOnly(item: NavItem, role: Role | null): boolean {
   return role !== null && (item.readOnlyFor ?? []).includes(role);
 }
 
-/** Groups filtered to what this role may open. */
+/** Groups filtered to what this role may open, children excluded from the rail. */
 export function navigationFor(role: Role | null): NavGroup[] {
   if (!role) return [];
   return navigation
@@ -185,7 +205,7 @@ export function navigationFor(role: Role | null): NavGroup[] {
 export function homePathFor(role: Role | null): string {
   switch (role) {
     case "hwms-officer":
-      return "/health-wellness/occupational-health";
+      return "/patient-visits";
     case "hwms-manager":
     case "hwms-director":
       return "/dashboard";

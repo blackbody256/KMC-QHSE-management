@@ -11,7 +11,14 @@ export default {
           DEFAULT: "var(--kmc-red)",
           deep: "var(--kmc-red-deep)",
           wash: "var(--kmc-red-wash)",
-          ink: "var(--kmc-red-ink)",
+          tint: "var(--kmc-red-tint)",
+        },
+        dark: {
+          DEFAULT: "var(--dark)",
+          raised: "var(--dark-raised)",
+          rule: "var(--dark-rule)",
+          ink: "var(--dark-ink)",
+          "ink-muted": "var(--dark-ink-muted)",
         },
         ink: {
           DEFAULT: "var(--ink)",

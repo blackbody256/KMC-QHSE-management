@@ -124,6 +124,86 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: clinical
+  namespace: hwms
+spec:
+  selector: { app: clinical }
+  ports:
+    - port: 8083
+      targetPort: 8083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clinical
+  namespace: hwms
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: clinical }
+  template:
+    metadata:
+      labels: { app: clinical }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: clinical
+          image: ghcr.io/kiiramotors/hwms-clinical:latest
+          env:
+            - name: CLINICAL_ADDR
+              value: ":8083"
+            - name: CLINICAL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: CLINICAL_DB_PASSWORD }
+            # The only workload issued these credentials. No other deployment
+            # in this namespace references CLINICAL_DB_PASSWORD, and a review
+            # that finds a second one has found a defect.
+            - name: CLINICAL_DATABASE_URL
+              value: postgres://hwms_clinical:$(CLINICAL_DB_PASSWORD)@postgres-clinical:5432/clinical?sslmode=require
+          envFrom:
+            - configMapRef: { name: hwms-config }
+          ports:
+            - containerPort: 8083
+          livenessProbe:
+            httpGet: { path: /livez, port: 8083 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8083 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+# Only the clinical service may open a connection to the clinical database.
+# This is ADR-03 expressed at the network layer: even with the credentials, no
+# other pod in the namespace can reach the port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: clinical-database-isolation
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: postgres-clinical }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: clinical }
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: web
   namespace: hwms
 spec:

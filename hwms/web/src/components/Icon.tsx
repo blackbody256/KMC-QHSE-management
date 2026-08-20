@@ -2,10 +2,16 @@ import dashboard from "@material-symbols/svg-400/outlined/dashboard.svg?raw";
 import clinicalNotes from "@material-symbols/svg-400/outlined/clinical_notes.svg?raw";
 import accessibility from "@material-symbols/svg-400/outlined/accessibility_new.svg?raw";
 import monitorHeart from "@material-symbols/svg-400/outlined/monitor_heart.svg?raw";
-import report from "@material-symbols/svg-400/outlined/report.svg?raw";
-import eco from "@material-symbols/svg-400/outlined/eco.svg?raw";
-import factCheck from "@material-symbols/svg-400/outlined/fact_check.svg?raw";
+import science from "@material-symbols/svg-400/outlined/science.svg?raw";
+import forwardToInbox from "@material-symbols/svg-400/outlined/forward_to_inbox.svg?raw";
+import calendarMonth from "@material-symbols/svg-400/outlined/calendar_month.svg?raw";
 import assignment from "@material-symbols/svg-400/outlined/assignment.svg?raw";
+import add from "@material-symbols/svg-400/outlined/add.svg?raw";
+import search from "@material-symbols/svg-400/outlined/search.svg?raw";
+import personAdd from "@material-symbols/svg-400/outlined/person_add.svg?raw";
+import draft from "@material-symbols/svg-400/outlined/draft.svg?raw";
+import verified from "@material-symbols/svg-400/outlined/verified.svg?raw";
+import download from "@material-symbols/svg-400/outlined/download.svg?raw";
 import manageAccounts from "@material-symbols/svg-400/outlined/manage_accounts.svg?raw";
 import logout from "@material-symbols/svg-400/outlined/logout.svg?raw";
 import login from "@material-symbols/svg-400/outlined/login.svg?raw";
@@ -33,10 +39,16 @@ const registry = {
   clinical_notes: clinicalNotes,
   accessibility_new: accessibility,
   monitor_heart: monitorHeart,
-  report,
-  eco,
-  fact_check: factCheck,
+  science,
+  forward_to_inbox: forwardToInbox,
+  calendar_month: calendarMonth,
   assignment,
+  add,
+  search,
+  person_add: personAdd,
+  draft,
+  verified,
+  download,
   manage_accounts: manageAccounts,
   logout,
   login,
@@ -57,6 +69,7 @@ interface IconProps {
   name: IconName;
   size?: number;
   className?: string;
+  style?: React.CSSProperties;
   /**
    * Icons are decorative by default. An icon that carries meaning on its own
    * has already broken the rule that status is a glyph plus a word — so where
@@ -65,11 +78,11 @@ interface IconProps {
   label?: string;
 }
 
-export function Icon({ name, size = 20, className = "", label }: IconProps) {
+export function Icon({ name, size = 20, className = "", label, style }: IconProps) {
   return (
     <span
       className={`icon ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, ...style }}
       aria-hidden={label ? undefined : true}
       aria-label={label}
       role={label ? "img" : undefined}

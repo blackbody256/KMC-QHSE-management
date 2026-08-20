@@ -35,10 +35,14 @@ type gateway struct {
 	oauth    *oauth2.Config
 	provider *oidc.Provider
 	verifier *oidc.IDTokenVerifier
-	sessions *sessionStore
+	// Verifies access tokens for their roles. The audience check is skipped
+	// because an access token is addressed to the resource server, not here.
+	accessVerifier *oidc.IDTokenVerifier
+	sessions       *sessionStore
 
 	appBaseURL   string
 	identityURL  *url.URL
+	clinicalURL  *url.URL
 	cookieSecure bool
 	idleTimeout  time.Duration
 }
@@ -55,6 +59,7 @@ func main() {
 		redirectURL  = cfg.Required("OIDC_REDIRECT_URL")
 		appBaseURL   = cfg.Required("APP_BASE_URL")
 		identityRaw  = cfg.Required("IDENTITY_SERVICE_URL")
+		clinicalRaw  = cfg.Required("CLINICAL_SERVICE_URL")
 		cookieSecure = cfg.Bool("COOKIE_SECURE", true)
 		idleTimeout  = cfg.Duration("SESSION_IDLE_TIMEOUT", 30*time.Minute)
 		startupWait  = cfg.Duration("OIDC_STARTUP_WAIT", 2*time.Minute)
@@ -72,6 +77,11 @@ func main() {
 		log.Error("IDENTITY_SERVICE_URL is not a URL", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+	clinicalURL, err := url.Parse(clinicalRaw)
+	if err != nil {
+		log.Error("CLINICAL_SERVICE_URL is not a URL", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 
 	ctx := context.Background()
 
@@ -85,9 +95,10 @@ func main() {
 	}
 
 	g := &gateway{
-		log:      log,
-		provider: provider,
-		verifier: provider.Verifier(&oidc.Config{ClientID: clientID}),
+		log:            log,
+		provider:       provider,
+		verifier:       provider.Verifier(&oidc.Config{ClientID: clientID}),
+		accessVerifier: provider.Verifier(&oidc.Config{SkipClientIDCheck: true}),
 		oauth: &oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
@@ -98,6 +109,7 @@ func main() {
 		sessions:     newSessionStore(idleTimeout),
 		appBaseURL:   appBaseURL,
 		identityURL:  identityURL,
+		clinicalURL:  clinicalURL,
 		cookieSecure: cookieSecure,
 		idleTimeout:  idleTimeout,
 	}
@@ -127,6 +139,7 @@ func main() {
 	})
 
 	r.Handle("/api/identity/*", g.proxyTo(g.identityURL, "/api/identity"))
+	r.Handle("/api/clinical/*", g.proxyTo(g.clinicalURL, "/api/clinical"))
 
 	if err := serve.Run(ctx, addr, r, log); err != nil {
 		log.Error("server stopped", slog.String("error", err.Error()))

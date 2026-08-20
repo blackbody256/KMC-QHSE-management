@@ -10,18 +10,21 @@ This is not the prototype. The prototype in `../prototype` exists to confirm req
 
 ## What exists today
 
-This is Phase 0 and the identity half of Phase 1. It is a foundation, deliberately narrow and complete rather than broad and partial.
+Phase 0, the identity half of Phase 1, and the first half of the clinical phase. Deliberately narrow and complete rather than broad and partial.
 
 | Built | Not built |
 |---|---|
-| Keycloak realm, roles, and the OIDC sign-in flow | Clinical records, patients, patient visits |
-| Gateway holding tokens server side, browser holds an opaque cookie | Safety incident register and attestation |
-| Account administration: the manager creates officers and directors | Monitoring register, ergonomics, monthly returns |
-| Audit trail for every account action | Metrics service, so every dashboard figure reads "no data" |
-| Role-based routing for all three roles, across every planned module | Reports |
-| Design tokens, type, icons, status and value components | |
-| Prometheus metrics and Grafana | Loki and Tempo |
-| Compose stack and k3s manifests | CI pipeline |
+| Keycloak realm, roles, and the OIDC sign-in flow | Medical referrals and their PDF |
+| Gateway holding tokens server side, browser holds an opaque cookie | Industrial hygiene and ergonomics registers |
+| **Laboratory requisitions on KMC.DQHSE.05/26-FM008, with results and a form PDF** | Monthly returns |
+| Account administration: the manager creates officers and directors | Industrial hygiene and ergonomics registers |
+| **Patient registry and patient visits, on a separate database instance** | Monthly returns |
+| **Visit sections, section state, signing, completeness** | Metrics service, so every dashboard figure reads "no data" |
+| **Clinical access logging before every retrieval** | Amendment of a signed visit |
+| **An access-control suite proving no other role reaches a clinical route** | Reports |
+| Role-based routing for all three roles | Loki and Tempo |
+| Prometheus metrics and Grafana | CI pipeline |
+| Compose stack and k3s manifests | |
 
 Every module in the navigation is routed and access-controlled. The ones that are not built say so, and show what records they will hold. **None of them shows a figure**, because a number with no record behind it is the problem this system was commissioned to remove — and a stakeholder who sees one assumes the capability exists.
 
@@ -55,9 +58,9 @@ make up
 
 | Service | Address |
 |---|---|
-| Application | http://localhost:8080 |
+| Application | http://localhost:8090 |
 | Keycloak | http://keycloak:8180 |
-| Grafana | http://localhost:3000 |
+| Grafana | http://localhost:3001 |
 | Prometheus | http://localhost:9090 |
 
 ### Seed the manager
@@ -72,7 +75,7 @@ It asks for **two different passwords** and mixing them up is the usual way this
 
 The first is the **Keycloak administrator** password, which already exists. Without a `.env` file it is the `docker-compose.yml` default, `admin-development-password`. With one, it is whatever `KEYCLOAK_ADMIN_PASSWORD` holds.
 
-The second is the **temporary password for the manager account** you are creating. The script never stores it, and the manager must change it at first sign-in. Sign in at http://localhost:8080, change the password when prompted, then open **Accounts** to create Health and Wellness Officer and Director accounts.
+The second is the **temporary password for the manager account** you are creating. The script never stores it, and the manager must change it at first sign-in. Sign in at http://localhost:8090, change the password when prompted, then open **Accounts** to create Health and Wellness Officer and Director accounts.
 
 ### Frontend development
 
@@ -94,7 +97,57 @@ make web-dev     # http://localhost:5173, proxying /auth and /api to the gateway
 
 The Director sees less than the Manager. That is deliberate and it reflects the oversight task rather than lesser authority — worth saying out loud, because it inverts the usual hierarchy and otherwise reads as a defect.
 
-**Individual clinical records will be accessible to the Health and Wellness Officer only.** Not the manager, not the director, not an administrator, not a report generator. That rule is already expressed in the Keycloak roles and the route table; when the clinical service is built it will also be expressed in that service holding the only credentials for the clinical database, and in a test that proves every other role receives 403 on every clinical route. Write that test before the feature.
+**Individual clinical records are accessible to the Health and Wellness Officer only.** Not the manager, not the director, not an administrator, not a report generator. That rule is enforced in four independent places, deliberately:
+
+1. **The Keycloak role.** Only `hwms-officer` carries it.
+2. **The route table.** Clinical routes are not offered to any other role.
+3. **The service.** Checked in the HTTP handler and again in the service layer, so a code path that never passes through a handler is still refused.
+4. **The deployment.** The clinical service holds the only credentials for the clinical database, which runs as a separate instance. In the cluster a network policy means no other pod can even open the port. A defect in another service cannot read a patient record because it has nothing to read it with.
+
+`services/clinical/access_test.go` proves the third of those on every build: 49 assertions covering every clinical route against every non-officer role, plus a walk of the route tree that fails if a route is added without being covered. The tests run against a **nil** store, so any handler that reached the data layer before checking the role would panic rather than pass.
+
+Every retrieval of an individual record writes to `clinical_access_log` **before** the record is returned. If that write fails, the read fails — a system that cannot say who read a patient's record has lost the one question the Data Protection and Privacy Act makes it answerable for.
+
+A laboratory requisition carries the patient's name, staff number, clinical summary and results. It is a clinical record and is covered by all of the above.
+
+---
+
+## The patient record
+
+`GET /api/clinical/patients/{id}/record` returns one patient's whole history in one call, and the screen at `/patients/record` renders it as a single timeline.
+
+**The problem it fixes.** Visits, laboratory requisitions and referrals were three separate registers, each keyed differently. An officer reconstructing what had happened to a patient opened the visit register and filtered it, then opened the laboratory register and filtered that, and held the join in their head. The registry itself offered no way to open a patient at all — its only action was "Start visit".
+
+That threw away a relationship the data already has. A requisition is raised *from* a visit; a referral is raised *from* a visit. The visit is the natural unit of the record, and the things that came out of it belong underneath it.
+
+**How it is organised**, in the order a clinician needs it:
+
+1. **Who this is** — identity in one line.
+2. **What is outstanding** — draft visits, requisitions without results. Shown *only when there is something*. A permanent banner reading "0 outstanding" teaches people to stop reading banners, and the one time it matters is the time it gets scrolled past.
+3. **How much history there is** — visit count, first and last seen, work-related count, so the length of the stream is expected before scrolling.
+4. **The timeline** — reverse chronological, one card per visit, quoting the complaint, impression and treatment. Requisitions raised from that visit are nested inside its card with their own status. Actions sit where the reader already is: continue or review the visit, request laboratory.
+
+Requisitions whose visit falls outside the loaded window appear in a separate block rather than being dropped. A result nobody can find is worse than an untidy list.
+
+**Assembled server side for two reasons.** The join stays where the data is, and opening a record writes **one** entry to `clinical_access_log` rather than three. One purposeful read, one entry — three entries for one act would make the log harder to read without making it more truthful.
+
+The timeline quotes three sections per visit, not the whole record. A timeline that reproduced everything would *be* the record, and the officer would scroll past what they opened it to find. Where a section was completed by ticking rather than typing, the selections are shown — a section recorded properly should not display as empty because the notes box was.
+
+---
+
+## Laboratory — KMC.DQHSE.05/26-FM008
+
+Seven investigations in four groups, as the clinic's form prints them: blood smear and mRDT for malaria; typhoid antigen and *H. pylori* stool antigen; complete blood count; random and fasting blood sugar. The catalogue is published by the service at `/api/clinical/lab/catalogue` so the interface keeps no copy of it — two lists would eventually disagree, and the one that disagreed silently would be the one a clinician ticked.
+
+The form drives two decisions that differ from what a laboratory module is usually assumed to do.
+
+**A result belongs to a requested investigation, not to a separate analyte record.** The form puts the Results column beside the Requested Investigations column, so the result is stored on the join row.
+
+**There is no abnormality flag.** The form carries no units and no reference ranges, so a result is recorded exactly as the laboratory reported it. Deciding a value is abnormal needs a range KMC has not defined, and inventing one would put a clinical judgement in the software's mouth.
+
+> **Open question for the laboratory.** An earlier draft of this system carried effective-dated reference ranges and an automatic abnormal flag. That was our proposal, not KMC's requirement, and it was removed when the real form arrived. If the laboratory wants structured ranges and flagging, they can be added — the machinery already exists for environmental limits. Ask them; do not assume.
+
+`laboratory_test.go` asserts the catalogue against the form: seven codes in printed order, every test in a printed group, and the fasting instruction preserved against FBS. That last one is a patient instruction — losing it means somebody fasts unnecessarily, or does not fast when they should.
 
 ---
 

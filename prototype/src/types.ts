@@ -197,55 +197,83 @@ export interface HealthWellnessPlan {
   confirmedOccupationalDiseases: number;
 }
 
-export type LabPriority = "Routine" | "Urgent";
-export type SurveillanceContext =
-  | "Pre-employment"
-  | "Periodic surveillance"
-  | "Exit"
-  | "Incident";
+/**
+ * Laboratory requisition — KMC.DQHSE.05/26-FM008.
+ *
+ * Modelled on the form the clinic actually uses. The earlier generic panel,
+ * with liver function, lipids, audiometry and the rest, was a placeholder and
+ * has been removed: none of it appears on the form.
+ *
+ * Two things the form does that are worth stating, because both differ from
+ * what a laboratory module is usually assumed to do:
+ *
+ * The Results column sits beside the Requested Investigations column, so a
+ * result belongs to a requested test on one sheet rather than to a separate
+ * analyte record. Results are recorded as written, because the form carries no
+ * units and no reference ranges.
+ *
+ * There is therefore no abnormality flag. Deciding a result is abnormal needs
+ * a range the form does not define, and inventing one would put a clinical
+ * judgement in the software's mouth. Whether the laboratory wants structured
+ * ranges is recorded as an open question rather than answered here.
+ */
+export type LabTestCode =
+  | "BS"
+  | "MRDT"
+  | "TYPHOID_AG"
+  | "HPYLORI_AG"
+  | "CBC"
+  | "RBS"
+  | "FBS";
 
-export interface LabReferenceRange extends EffectiveDatedRecord {
-  panel: string;
-  analyte: string;
-  specimenType: string;
-  unit: string;
-  displayRange: string;
+export type LabTestGroup =
+  | "Malaria & Parasitology"
+  | "Gastrointestinal & Serology"
+  | "Hematology"
+  | "Blood Glucose Monitoring";
+
+export type LabSpecimenType = "Whole Blood" | "Serum/Plasma" | "Stool";
+
+/**
+ * requested  — the officer has completed and authorised the top of the form
+ * collected  — the laboratory has recorded the specimen and who took it
+ * resulted   — results have been written against the requested tests
+ */
+export type LabRequisitionStatus = "requested" | "collected" | "resulted";
+
+/** One requested investigation and the result written against it. */
+export interface LabRequestedTest {
+  code: LabTestCode;
+  /** As written by the laboratory. Free text, because the form is free text. */
+  result: string;
+  resultedAt?: string;
 }
 
-export interface LabTestRequest {
+export interface LabRequisition {
   id: string;
+  formNumber: "KMC.DQHSE.05/26-FM008";
   visitId: string;
   patientId: string;
-  requestingOfficer: string;
-  requestedAt: string;
-  specimenType: string;
-  testsRequested: string[];
-  clinicalIndication: string;
-  priority: LabPriority;
-  surveillanceContext: SurveillanceContext;
-  proposalNotice: string;
+  status: LabRequisitionStatus;
+  /** Taken at the time of the request, as the printed form is. */
+  patientSnapshot: {
+    fullName: string;
+    staffIdNumber: string;
+    department: string;
+    gender: "Female" | "Male";
+    ageOrDob: string;
+  };
+  requestDate: string;
+  tests: LabRequestedTest[];
+  clinicalSummary: string;
+  authorisedBy: string;
+  authorisedSignatureConfirmed: boolean;
+  /** For Laboratory Use Only. */
+  specimenCollected?: LabSpecimenType[];
+  collectedBy?: string;
+  timeOfCollection?: string;
   createdAt: string;
-}
-
-export interface LabRangeSnapshot {
-  referenceRangeId: string;
-  displayRange: string;
-  unit: string;
-  effectiveFrom: string;
-  sourceNote: string;
-}
-
-export interface LabTestResult {
-  id: string;
-  requestId: string;
-  analyte: string;
-  value: string;
-  unit: string;
-  rangeApplied: LabRangeSnapshot;
-  abnormal: boolean;
-  verifyingPractitioner: string;
-  resultDate: string;
-  createdAt: string;
+  updatedAt: string;
 }
 
 export type ReferralStatus = "drafted" | "authorised" | "issued" | "returned" | "reviewed";
@@ -330,7 +358,7 @@ export interface MedicalReferral {
 }
 
 export interface DemoState {
-  version: 3;
+  version: 4;
   role: DemoRole;
   patients: Patient[];
   visits: PatientVisit[];
@@ -340,9 +368,7 @@ export interface DemoState {
   industrialHygieneReadings: IndustrialHygieneReading[];
   ergonomicAssessments: ErgonomicAssessment[];
   plans: HealthWellnessPlan[];
-  labReferenceRanges: LabReferenceRange[];
-  labRequests: LabTestRequest[];
-  labResults: LabTestResult[];
+  labRequisitions: LabRequisition[];
   referrals: MedicalReferral[];
 }
 
@@ -352,16 +378,32 @@ export interface MetricValue {
   status: ComplianceStatus;
   completeness: "complete" | "incomplete" | "no-data";
   note?: string;
+  calculation?: string;
+  targetLabel?: string;
 }
 
 export interface DashboardMetric {
   id: string;
   name: string;
+  group: KpiDefinition["group"];
   target: string;
+  targetValue: number;
+  comparison: KpiComparison;
+  format: MetricFormat;
   direction: MetricDirection;
   provenance: MetricProvenance;
+  sourceNote: string;
   note: string;
   proposed: boolean;
+  aggregationLabel: "Year-to-date total" | "Year-to-date weighted rate";
   month: MetricValue;
   yearToDate: MetricValue;
+}
+
+export interface MetricTrendPoint {
+  period: string;
+  periodCode: string;
+  value: number | null;
+  displayValue: string;
+  status: ComplianceStatus;
 }

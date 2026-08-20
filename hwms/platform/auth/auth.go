@@ -177,6 +177,17 @@ func (v *Verifier) Authenticate(next http.Handler) http.Handler {
 
 // RequireRole is the handler-layer half of the double check.
 func RequireRole(role string) func(http.Handler) http.Handler {
+	return RequireRoleWithMessage(role,
+		"This account does not have access to that function. Ask the manager if you believe it should.")
+}
+
+// RequireRoleWithMessage is RequireRole with a refusal the caller supplies.
+//
+// It exists so that a refusal can name the rule being enforced rather than
+// stating only that access was denied. On a clinical route the useful message
+// is which role may retrieve the record, because the answer is deliberate and
+// permanent rather than an oversight someone can have corrected.
+func RequireRoleWithMessage(role, detail string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s, ok := SubjectFrom(r.Context())
@@ -185,8 +196,7 @@ func RequireRole(role string) func(http.Handler) http.Handler {
 				return
 			}
 			if !s.HasRole(role) {
-				httpx.Problem(w, http.StatusForbidden,
-					"This account does not have access to that function. Ask the manager if you believe it should.")
+				httpx.Problem(w, http.StatusForbidden, detail)
 				return
 			}
 			next.ServeHTTP(w, r)

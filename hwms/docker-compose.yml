@@ -28,6 +28,26 @@ services:
       retries: 20
     restart: unless-stopped
 
+  # The clinical database runs as a separate instance with separate
+  # credentials, per DR-03. Not a separate database on the shared instance — a
+  # separate instance. The reason for the separation is legal rather than
+  # architectural, and a shared instance would leave one credential leak
+  # between an unrelated service and a patient record.
+  postgres-clinical:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${CLINICAL_DB_USER:-hwms_clinical}
+      POSTGRES_PASSWORD: ${CLINICAL_DB_PASSWORD:-clinical-development-password}
+      POSTGRES_DB: clinical
+    volumes:
+      - postgres-clinical-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CLINICAL_DB_USER:-hwms_clinical}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     command: ["start-dev", "--import-realm"]
@@ -59,6 +79,11 @@ services:
     build:
       context: .
       dockerfile: services/gateway/Dockerfile
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
     environment:
       GATEWAY_ADDR: ":8081"
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -78,9 +103,10 @@ services:
       OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8180/realms/hwms}
       OIDC_CLIENT_ID: hwms-gateway
       OIDC_CLIENT_SECRET: ${GATEWAY_CLIENT_SECRET:-development-only-gateway-secret-rotate-me}
-      OIDC_REDIRECT_URL: ${APP_BASE_URL:-http://localhost:8080}/auth/callback
-      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      OIDC_REDIRECT_URL: ${APP_BASE_URL:-http://localhost:8090}/auth/callback
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8090}
       IDENTITY_SERVICE_URL: http://identity:8082
+      CLINICAL_SERVICE_URL: http://clinical:8083
       # Plain HTTP locally. Production terminates TLS at the ingress and this
       # is true, per NFR-SEC-01.
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
@@ -88,12 +114,41 @@ services:
     depends_on:
       - keycloak
       - identity
+      - clinical
+    restart: unless-stopped
+
+  clinical:
+    build:
+      context: .
+      dockerfile: services/clinical/Dockerfile
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
+    environment:
+      CLINICAL_ADDR: ":8083"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8180/realms/hwms}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-account}
+      # The only service issued these credentials.
+      CLINICAL_DATABASE_URL: postgres://${CLINICAL_DB_USER:-hwms_clinical}:${CLINICAL_DB_PASSWORD:-clinical-development-password}@postgres-clinical:5432/clinical?sslmode=disable
+    depends_on:
+      postgres-clinical:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
     restart: unless-stopped
 
   identity:
     build:
       context: .
       dockerfile: services/identity/Dockerfile
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
     environment:
       IDENTITY_ADDR: ":8082"
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -123,8 +178,18 @@ services:
   web:
     build:
       context: ./web
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
     ports:
-      - "8080:8080"
+      # 8090 rather than 8080 by default: 8080 is the most contended port on a
+      # developer machine, and losing a first run to a port clash with an
+      # unrelated project is a poor introduction to the system. Override with
+      # WEB_PORT, and change APP_BASE_URL and the realm redirect URI together
+      # if you do — all three have to agree or sign-in is refused.
+      - "${WEB_PORT:-8090}:8080"
     depends_on:
       - gateway
     restart: unless-stopped
@@ -152,12 +217,13 @@ services:
       - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3001}:3000"
     depends_on:
       - prometheus
     restart: unless-stopped
 
 volumes:
   postgres-data:
+  postgres-clinical-data:
   prometheus-data:
   grafana-data:

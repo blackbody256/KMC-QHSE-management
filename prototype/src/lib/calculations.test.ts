@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { createSeedState } from "../data/seed";
+import { labTestCatalogue, labTestGroups } from "../data/labCatalogue";
 import {
   absenteeismRate,
   buildDashboardSnapshot,
   calculateBmi,
-  effectiveLabRanges,
   evaluateMetric,
+  metricTrendData,
   referralSickLeaveDaysForPeriod,
   safePercent,
 } from "./calculations";
@@ -34,7 +35,20 @@ describe("Health and Wellness dashboard calculations", () => {
     expect(metric.target).toBe("≥ 200");
     expect(metric.month.displayValue).toBe("214.0");
     expect(metric.month.status).toBe("within");
-    expect(metric.yearToDate.displayValue).toBe("203.6");
+    expect(metric.yearToDate.displayValue).toBe("1425.0");
+    expect(metric.yearToDate.targetLabel).toBe("≥ 1,400 YTD");
+  });
+
+  it("uses YTD totals for event metrics rather than averaging monthly counts", () => {
+    const snapshot = buildDashboardSnapshot(createSeedState(), "2026-07");
+    expect(snapshot.metrics.find((item) => item.id === "S2")?.yearToDate.displayValue).toBe("2");
+    expect(snapshot.metrics.find((item) => item.id === "S3")?.yearToDate.displayValue).toBe("1");
+  });
+
+  it("weights YTD compliance by its underlying denominator", () => {
+    const metric = buildDashboardSnapshot(createSeedState(), "2026-07").metrics.find((item) => item.id === "OH1")!;
+    expect(metric.yearToDate.displayValue).toBe("93.8%");
+    expect(metric.yearToDate.calculation).toBe("271 completed ÷ 289 scheduled × 100");
   });
 
   it("does not average incomplete year-to-date histories", () => {
@@ -58,6 +72,15 @@ describe("Health and Wellness dashboard calculations", () => {
     expect(metric.month.status).toBe("no-data");
   });
 
+  it("builds one-scale trend data for any selected KPI", () => {
+    const trend = metricTrendData(createSeedState(), "S4", "2026-07");
+    expect(trend.at(-1)).toMatchObject({
+      periodCode: "2026-07",
+      displayValue: "214.0",
+      status: "within",
+    });
+  });
+
   it("reads approaching bands from effective-dated definitions", () => {
     const definition = createSeedState().kpiDefinitions.find((item) => item.metricId === "S4")!;
     expect(evaluateMetric(185, definition)).toBe("approaching");
@@ -70,18 +93,36 @@ describe("Health and Wellness dashboard calculations", () => {
   });
 });
 
-describe("laboratory reference history", () => {
-  it("selects only reference ranges effective on the result date", () => {
-    const state = createSeedState();
-    state.labReferenceRanges[0].effectiveTo = "2026-06-30";
-    expect(effectiveLabRanges(state, "2026-07-23").some((range) => range.id === state.labReferenceRanges[0].id)).toBe(false);
+describe("laboratory requisition", () => {
+  it("models the investigations printed on KMC.DQHSE.05/26-FM008 and nothing else", () => {
+    // Seven tests in four groups. If this fails, either the form changed or
+    // somebody has added an investigation the clinic does not offer.
+    expect(labTestCatalogue).toHaveLength(7);
+    expect(new Set(labTestCatalogue.map((test) => test.group))).toEqual(new Set(labTestGroups));
+    expect(labTestCatalogue.map((test) => test.code)).toEqual([
+      "BS", "MRDT", "TYPHOID_AG", "HPYLORI_AG", "CBC", "RBS", "FBS",
+    ]);
   });
 
-  it("keeps the stored range and abnormal flag unchanged after reference data is revised", () => {
+  it("carries the fasting instruction the form prints against FBS", () => {
+    const fbs = labTestCatalogue.find((test) => test.code === "FBS");
+    expect(fbs?.preparationNote).toMatch(/8.*12 hours of fasting/);
+  });
+
+  it("attaches each result to the investigation it was requested against", () => {
     const state = createSeedState();
-    const result = state.labResults[0];
-    state.labReferenceRanges[0].displayRange = "Revised later";
-    expect(result.rangeApplied.displayRange).toBe("12.0–17.5");
-    expect(result.abnormal).toBe(true);
+    const resulted = state.labRequisitions.find((entry) => entry.status === "resulted");
+    expect(resulted).toBeDefined();
+    for (const test of resulted!.tests) {
+      expect(labTestCatalogue.some((definition) => definition.code === test.code)).toBe(true);
+      expect(test.result).not.toBe("");
+    }
+  });
+
+  it("leaves results empty until the laboratory has written them", () => {
+    const state = createSeedState();
+    const requested = state.labRequisitions.find((entry) => entry.status === "requested");
+    expect(requested!.tests.every((test) => test.result === "")).toBe(true);
+    expect(requested!.specimenCollected).toBeUndefined();
   });
 });

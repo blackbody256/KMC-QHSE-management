@@ -11,7 +11,7 @@
 
 set -uo pipefail
 
-APP="${APP_BASE_URL:-http://localhost:8080}"
+APP="${APP_BASE_URL:-http://localhost:8090}"
 KEYCLOAK="${KEYCLOAK_URL:-http://keycloak:8180}"
 REALM="${KEYCLOAK_REALM:-hwms}"
 
@@ -67,7 +67,7 @@ esac
 echo
 echo "Observability"
 check "prometheus is scraping"  "200" "$(status "http://localhost:9090/-/ready")"
-check "grafana is up"           "200" "$(status "http://localhost:3000/api/health")"
+check "grafana is up"           "200" "$(status "http://localhost:3001/api/health")"
 
 echo
 printf 'passed %d, failed %d\n\n' "$pass" "$fail"

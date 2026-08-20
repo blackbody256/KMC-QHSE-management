@@ -16,43 +16,52 @@
  */
 
 :root {
-  /* Brand */
-  --kmc-red: #e4002b;
-  --kmc-red-deep: #a8001f;   /* red text on white; bright red fails contrast below 18px */
-  --kmc-red-wash: #fdf2f4;
-  --kmc-red-ink: #6d0014;    /* masthead gradient foot, deep panel fills */
+  /* Brand. These are the prototype's values, carried over unchanged — the
+     palette was reviewed and approved with the client, so it is settled and
+     is not re-derived here. */
+  --kmc-red: #e51f2b;
+  --kmc-red-deep: #a8131d;   /* red text on white; bright red fails contrast below 18px */
+  --kmc-red-wash: #fff1f2;
+  --kmc-red-tint: #ef7c84;   /* on dark surfaces only, where the deep red disappears */
 
   /* Ink */
-  --ink: #16181d;
-  --ink-muted: #596273;
-  --ink-faint: #8b94a3;
+  --ink: #18202b;
+  --ink-muted: #5f6b7a;
+  --ink-faint: #8b95a4;
   --ink-inverse: #ffffff;
 
   /* Surface */
-  --canvas: #f6f7f9;
+  --canvas: #f4f6f8;
   --surface: #ffffff;
-  --surface-sunken: #f1f3f6;
-  --rule: #e3e6eb;
-  --rule-strong: #c8ced6;
+  --surface-sunken: #f0f2f5;
+  --rule: #e1e5ea;
+  --rule-strong: #cbd1d9;
+
+  /* Dark surfaces, used on the sign-in panel only. */
+  --dark: #131922;
+  --dark-raised: #202936;
+  --dark-rule: #3b4655;
+  --dark-ink: #c4cbd5;
+  --dark-ink-muted: #aeb7c4;
 
   /* Status. Deliberately not the brand red, and not a naive red/green pair.
      Roughly one in twelve men has a colour vision deficiency, and red/green is
      the pair most commonly confused — which is exactly the pair a compliance
      dashboard reaches for first. */
   --ok: #0e7c66;
-  --ok-wash: #ecf6f3;
-  --caution: #a85f00;
-  --caution-wash: #fbf3e6;
-  --breach: #b3261e;
-  --breach-wash: #fbedec;
-  --neutral: #596273;
-  --neutral-wash: #f1f3f6;
-  --info: #2f4a7a;
-  --info-wash: #eef2f8;
+  --ok-wash: #eaf6f2;
+  --caution: #9a5b00;
+  --caution-wash: #fff5e5;
+  --breach: #b42318;
+  --breach-wash: #fdf0ee;
+  --neutral: #5f6b7a;
+  --neutral-wash: #f0f2f5;
+  --info: #1769aa;
+  --info-wash: #edf5fc;
 
   /* Focus. Never red, or it becomes indistinguishable from an error state.
      The departure from brand here is deliberate. */
-  --focus: #0b5fce;
+  --focus: #0b63ce;
 
   /* Type. Public Sans for the interface, Roboto Mono for measured values.
      Every number that was measured, counted or computed renders in the mono

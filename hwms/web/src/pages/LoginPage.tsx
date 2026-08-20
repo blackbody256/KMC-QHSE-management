@@ -4,19 +4,27 @@ import { Icon } from "../components/Icon";
 /**
  * Sign-in.
  *
- * This page collects no credentials. It hands the browser to Keycloak, which
- * owns password policy, lockout, multi-factor and — later — the corporate
- * single sign-on. The application never sees a password, which is both safer
- * and the reason moving to corporate SSO later is a configuration change
- * rather than a release.
+ * The layout follows the prototype the client reviewed and approved: a dark
+ * branded panel carrying the KMC mark on one side, the sign-in action on the
+ * other. That arrangement is settled and is not re-litigated here.
+ *
+ * What differs from the prototype is what the right panel does. This page
+ * collects no credentials. It hands the browser to Keycloak, which owns
+ * password policy, lockout, multi-factor and — later — corporate single
+ * sign-on. The application never sees a password, which is both safer and the
+ * reason moving to corporate sign-on later is a configuration change rather
+ * than a release.
  */
 const errorMessages: Record<string, string> = {
   denied: "Sign-in was cancelled. Select sign in to try again.",
   state: "The sign-in attempt expired before it completed. Select sign in to start again.",
   exchange: "Sign-in could not be completed. Select sign in to try again, and tell ICT if it recurs.",
-  no_id_token: "The sign-in service returned an incomplete response. Tell ICT with the time this happened.",
-  invalid_token: "The sign-in service returned a response this system could not verify. Tell ICT with the time this happened.",
-  no_role: "This account has no role assigned, so there is nothing it can open. Ask the manager to assign a role.",
+  no_id_token:
+    "The sign-in service returned an incomplete response. Tell ICT with the time this happened.",
+  invalid_token:
+    "The sign-in service returned a response this system could not verify. Tell ICT with the time this happened.",
+  no_role:
+    "This account has no role assigned, so there is nothing it can open. Ask the manager to assign a role.",
 };
 
 export function LoginPage() {
@@ -25,52 +33,94 @@ export function LoginPage() {
   const message = errorKey ? (errorMessages[errorKey] ?? errorMessages.exchange) : null;
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[45fr_55fr]">
-      {/* Imagery panel. The background colour beneath is not a placeholder to
-          be removed — it is the fallback that keeps this screen composed when
-          the photograph is absent or still loading. */}
-      <div
-        className="relative hidden lg:block"
+    <main className="grid min-h-screen lg:grid-cols-[minmax(360px,0.9fr)_minmax(480px,1.1fr)]"
+          style={{ background: "var(--dark)" }}>
+      {/* Branded panel. The KMC mark sits here, top left, at full colour on a
+          dark ground — the arrangement the client signed off. */}
+      <section
+        className="relative flex min-h-screen flex-col justify-between px-8 py-12 lg:px-[clamp(32px,5vw,76px)]"
         style={{
-          background: "linear-gradient(160deg, var(--kmc-red-ink) 0%, var(--ink) 100%)",
-          backgroundImage:
-            "linear-gradient(160deg, rgba(109,0,20,0.72) 0%, rgba(22,24,29,0.88) 100%), url('/images/login-panel.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          color: "var(--ink-inverse)",
+          background:
+            "radial-gradient(circle at 16% 18%, rgb(229 31 43 / 18%), transparent 28%), linear-gradient(145deg, var(--dark) 0%, var(--dark-raised) 100%)",
         }}
       >
-        <div className="flex h-full flex-col justify-between p-12 text-ink-inverse">
+        <div className="flex flex-col items-start gap-2">
           <img
-            src="/kmc-logo-mask.png"
+            src="/kmc-logo-rgb.png"
             alt="Kiira Motors Corporation"
-            className="h-10 w-auto brightness-0 invert"
+            className="w-[230px] max-w-full"
           />
+          <span
+            className="text-xs uppercase tracking-[0.08em]"
+            style={{ color: "var(--dark-ink-muted)" }}
+          >
+            Health and Wellness · Occupational health
+          </span>
+        </div>
 
-          <div className="max-w-md">
-            <h1 className="text-2xl font-semibold leading-tight">
-              Quality, health, safety and environment
-            </h1>
-            <p className="mt-4 text-sm leading-relaxed opacity-90">
-              Operational records are captured once, where the work happens. Every figure reported to
-              management is derived from those records and states where it came from.
-            </p>
-          </div>
+        <div className="max-w-[580px] py-16">
+          <span
+            className="mb-4 block text-xs font-semibold uppercase tracking-[0.11em]"
+            style={{ color: "var(--kmc-red-tint)" }}
+          >
+            Department of Quality, Health, Safety and Environment
+          </span>
+          <h1 className="mb-5 max-w-[540px] text-[clamp(2rem,4vw,3.3rem)] font-semibold leading-[1.08]">
+            Sign in to the workspace for your role
+          </h1>
+          <p
+            className="max-w-[560px] text-[0.95rem] leading-[1.7]"
+            style={{ color: "var(--dark-ink)" }}
+          >
+            Operational records are captured once, where the work happens. Every figure reported to
+            management is derived from those records and states where it came from.
+          </p>
+        </div>
 
-          <div className="text-xs opacity-75">
-            Kiira Motors Corporation · Kiira Vehicle Plant
+        <div
+          className="flex max-w-[540px] gap-3 rounded p-4"
+          style={{ background: "rgb(255 255 255 / 5%)", border: "1px solid var(--dark-rule)" }}
+        >
+          <Icon name="lock" size={22} className="shrink-0" style={{ color: "var(--kmc-red-tint)" }} />
+          <div className="flex flex-col gap-1">
+            <strong className="text-[0.78rem]">Access follows the signed-in role</strong>
+            <span className="text-[0.7rem] leading-[1.5]" style={{ color: "var(--dark-ink-muted)" }}>
+              Individual clinical records — patients, visits, laboratory results and referrals — are
+              open to the Health and Wellness Officer only. Every retrieval is logged.
+            </span>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Sign-in panel */}
-      <div className="flex items-center justify-center bg-surface px-6 py-12">
-        <div className="w-full max-w-sm">
-          <img src="/kmc-logo-rgb.png" alt="Kiira Motors Corporation" className="mb-8 h-10 w-auto lg:hidden" />
+      <section className="flex items-center justify-center px-6 py-12">
+        <div
+          className="w-full max-w-[560px] rounded-[5px] p-8"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--rule)",
+            boxShadow: "0 24px 70px rgb(0 0 0 / 20%)",
+          }}
+        >
+          <div className="mb-6 flex items-center gap-3">
+            <span
+              className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded"
+              style={{ color: "var(--kmc-red-deep)", background: "var(--kmc-red-wash)" }}
+            >
+              <Icon name="lock" size={20} />
+            </span>
+            <div>
+              <h2 className="text-lg">Sign in</h2>
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Use your Kiira Motors account.
+              </p>
+            </div>
+          </div>
 
-          <h2 className="text-xl">Sign in</h2>
-          <p className="mt-2 text-sm text-ink-muted">
-            Use your Kiira Motors account. You will be taken to the corporate sign-in page and
-            returned here.
+          <p className="text-sm leading-relaxed text-ink-muted">
+            You will be taken to the corporate sign-in page and returned here. This system never
+            receives your password.
           </p>
 
           {message ? (
@@ -98,13 +148,9 @@ export function LoginPage() {
               Accounts are created by the Health and Wellness manager. If you cannot sign in, or your
               account opens nothing, ask the manager rather than ICT — role assignment is theirs.
             </p>
-            <p className="mt-3">
-              Individual clinical records are accessible to the Health and Wellness Officer only. No
-              other role can retrieve them, and every retrieval is logged.
-            </p>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

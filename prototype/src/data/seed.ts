@@ -5,9 +5,7 @@ import type {
   HygieneReferenceLimit,
   IndustrialHygieneReading,
   KpiDefinition,
-  LabReferenceRange,
-  LabTestRequest,
-  LabTestResult,
+  LabRequisition,
   MedicalReferral,
   MonthlyReturn,
   Patient,
@@ -406,64 +404,56 @@ const plans: HealthWellnessPlan[] = monthlyReturns.map((entry) => ({
   confirmedOccupationalDiseases: entry.period === "2026-07" ? 1 : 0,
 }));
 
-const labReferenceRanges: LabReferenceRange[] = [
-  ["Full blood count", "Haemoglobin", "Whole blood", "g/dL", "12.0–17.5"],
-  ["Liver function", "ALT", "Serum", "U/L", "7–56"],
-  ["Renal function", "Creatinine", "Serum", "mg/dL", "0.6–1.3"],
-  ["Blood sugar", "Fasting blood sugar", "Plasma", "mmol/L", "3.9–5.5"],
-  ["Urinalysis", "Protein", "Urine", "", "Negative"],
-  ["Lipid profile", "Total cholesterol", "Serum", "mmol/L", "< 5.2"],
-  ["Audiometry", "Hearing screen", "Not applicable", "", "Practitioner interpretation"],
-  ["Spirometry", "FEV1/FVC", "Not applicable", "%", "Practitioner interpretation"],
-  ["Vision screening", "Visual acuity", "Not applicable", "", "Practitioner interpretation"],
-  ["Exposure monitoring", "Blood lead", "Whole blood", "µg/dL", "< 20"],
-].map(([panel, analyte, specimenType, unit, displayRange], index) => ({
-  id: uid("lab-range", index + 1),
-  panel,
-  analyte,
-  specimenType,
-  unit,
-  displayRange,
-  effectiveFrom: "2026-01-01",
-  sourceNote: "Generic occupational health proposal awaiting KMC laboratory forms and approval.",
-  approvalState: "proposal",
-})) as LabReferenceRange[];
-
-const labRequests: LabTestRequest[] = [
+const labRequisitions: LabRequisition[] = [
   {
-    id: "lab-request-001",
+    id: "lab-req-001",
+    formNumber: "KMC.DQHSE.05/26-FM008",
     visitId: "visit-001",
     patientId: "patient-001",
-    requestingOfficer: "Miriam K. · Health and Wellness Officer",
-    requestedAt: "2026-07-23T09:28:00+03:00",
-    specimenType: "Whole blood",
-    testsRequested: ["Full blood count"],
-    clinicalIndication: "Synthetic demonstration request; practitioner-recorded indication.",
-    priority: "Routine",
-    surveillanceContext: "Periodic surveillance",
-    proposalNotice: "Proposed field set awaiting the actual KMC laboratory forms.",
-    createdAt: "2026-07-23T09:28:00+03:00",
-  },
-];
-
-const labResults: LabTestResult[] = [
-  {
-    id: "lab-result-001",
-    requestId: "lab-request-001",
-    analyte: "Haemoglobin",
-    value: "10.8",
-    unit: "g/dL",
-    rangeApplied: {
-      referenceRangeId: "lab-range-001",
-      displayRange: "12.0–17.5",
-      unit: "g/dL",
-      effectiveFrom: "2026-01-01",
-      sourceNote: "Generic occupational health proposal awaiting KMC laboratory forms and approval.",
+    status: "resulted",
+    patientSnapshot: {
+      fullName: "Sarah N. (synthetic)",
+      staffIdNumber: "KMC-1042",
+      department: "Body Shop",
+      gender: "Female",
+      ageOrDob: "31",
     },
-    abnormal: true,
-    verifyingPractitioner: "Dr N. Demo",
-    resultDate: "2026-07-23",
-    createdAt: "2026-07-23T15:40:00+03:00",
+    requestDate: "2026-07-23",
+    tests: [
+      { code: "BS", result: "No malaria parasites seen", resultedAt: "2026-07-23T14:10:00+03:00" },
+      { code: "CBC", result: "Hb 10.8 g/dL, WBC 6.2, Platelets 250", resultedAt: "2026-07-23T14:10:00+03:00" },
+    ],
+    clinicalSummary: "Synthetic demonstration record. Fever and fatigue for three days.",
+    authorisedBy: "Miriam K. · Health and Wellness Officer",
+    authorisedSignatureConfirmed: true,
+    specimenCollected: ["Whole Blood"],
+    collectedBy: "Lab technician (synthetic)",
+    timeOfCollection: "09:45",
+    createdAt: "2026-07-23T09:28:00+03:00",
+    updatedAt: "2026-07-23T14:10:00+03:00",
+  },
+  {
+    id: "lab-req-002",
+    formNumber: "KMC.DQHSE.05/26-FM008",
+    visitId: "visit-002",
+    patientId: "patient-002",
+    status: "requested",
+    patientSnapshot: {
+      fullName: "Joseph M. (synthetic)",
+      staffIdNumber: "KMC-0876",
+      department: "Trim Shop",
+      gender: "Male",
+      ageOrDob: "44",
+    },
+    requestDate: "2026-07-27",
+    tests: [
+      { code: "FBS", result: "" },
+    ],
+    clinicalSummary: "Synthetic demonstration record. Routine glucose check.",
+    authorisedBy: "Miriam K. · Health and Wellness Officer",
+    authorisedSignatureConfirmed: true,
+    createdAt: "2026-07-27T08:15:00+03:00",
+    updatedAt: "2026-07-27T08:15:00+03:00",
   },
 ];
 
@@ -538,7 +528,7 @@ const referrals: MedicalReferral[] = [
 ];
 
 export const createSeedState = (): DemoState => ({
-  version: 3,
+  version: 4,
   role: "manager",
   patients,
   visits,
@@ -548,8 +538,6 @@ export const createSeedState = (): DemoState => ({
   industrialHygieneReadings,
   ergonomicAssessments,
   plans,
-  labReferenceRanges,
-  labRequests,
-  labResults,
+  labRequisitions,
   referrals,
 });
