@@ -40,11 +40,14 @@ type gateway struct {
 	accessVerifier *oidc.IDTokenVerifier
 	sessions       *sessionStore
 
-	appBaseURL   string
-	identityURL  *url.URL
-	clinicalURL  *url.URL
-	cookieSecure bool
-	idleTimeout  time.Duration
+	appBaseURL      string
+	identityURL     *url.URL
+	clinicalURL     *url.URL
+	adminURL        *url.URL
+	occupationalURL *url.URL
+	metricsURL      *url.URL
+	cookieSecure    bool
+	idleTimeout     time.Duration
 }
 
 func main() {
@@ -60,6 +63,9 @@ func main() {
 		appBaseURL   = cfg.Required("APP_BASE_URL")
 		identityRaw  = cfg.Required("IDENTITY_SERVICE_URL")
 		clinicalRaw  = cfg.Required("CLINICAL_SERVICE_URL")
+		adminRaw     = cfg.Required("ADMIN_SERVICE_URL")
+		occupatRaw   = cfg.Required("OCCUPATIONAL_SERVICE_URL")
+		metricsRaw   = cfg.Required("METRICS_SERVICE_URL")
 		cookieSecure = cfg.Bool("COOKIE_SECURE", true)
 		idleTimeout  = cfg.Duration("SESSION_IDLE_TIMEOUT", 30*time.Minute)
 		startupWait  = cfg.Duration("OIDC_STARTUP_WAIT", 2*time.Minute)
@@ -80,6 +86,21 @@ func main() {
 	clinicalURL, err := url.Parse(clinicalRaw)
 	if err != nil {
 		log.Error("CLINICAL_SERVICE_URL is not a URL", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	adminURL, err := url.Parse(adminRaw)
+	if err != nil {
+		log.Error("ADMIN_SERVICE_URL is not a URL", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	occupationalURL, err := url.Parse(occupatRaw)
+	if err != nil {
+		log.Error("OCCUPATIONAL_SERVICE_URL is not a URL", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	metricsURL, err := url.Parse(metricsRaw)
+	if err != nil {
+		log.Error("METRICS_SERVICE_URL is not a URL", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
@@ -106,12 +127,15 @@ func main() {
 			RedirectURL:  redirectURL,
 			Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 		},
-		sessions:     newSessionStore(idleTimeout),
-		appBaseURL:   appBaseURL,
-		identityURL:  identityURL,
-		clinicalURL:  clinicalURL,
-		cookieSecure: cookieSecure,
-		idleTimeout:  idleTimeout,
+		sessions:        newSessionStore(idleTimeout),
+		appBaseURL:      appBaseURL,
+		identityURL:     identityURL,
+		clinicalURL:     clinicalURL,
+		adminURL:        adminURL,
+		occupationalURL: occupationalURL,
+		metricsURL:      metricsURL,
+		cookieSecure:    cookieSecure,
+		idleTimeout:     idleTimeout,
 	}
 
 	metrics := telemetry.New(serviceName)
@@ -140,6 +164,13 @@ func main() {
 
 	r.Handle("/api/identity/*", g.proxyTo(g.identityURL, "/api/identity"))
 	r.Handle("/api/clinical/*", g.proxyTo(g.clinicalURL, "/api/clinical"))
+	r.Handle("/api/admin/*", g.proxyTo(g.adminURL, "/api/admin"))
+	r.Handle("/api/occupational/*", g.proxyTo(g.occupationalURL, "/api/occupational"))
+	r.Handle("/api/metrics/*", g.proxyTo(g.metricsURL, "/api/metrics"))
+
+	// Note what is absent. The metrics service's /internal routes are not
+	// proxied here and never should be: they carry a shared service secret and
+	// no browser has any business reaching them.
 
 	if err := serve.Run(ctx, addr, r, log); err != nil {
 		log.Error("server stopped", slog.String("error", err.Error()))

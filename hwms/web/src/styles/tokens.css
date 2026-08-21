@@ -16,7 +16,7 @@
  */
 
 :root {
-  /* Brand. These are the prototype's values, carried over unchanged — the
+  /* Brand. These are the prototype's values, carried over unchanged. The
      palette was reviewed and approved with the client, so it is settled and
      is not re-derived here. */
   --kmc-red: #e51f2b;
@@ -46,7 +46,7 @@
 
   /* Status. Deliberately not the brand red, and not a naive red/green pair.
      Roughly one in twelve men has a colour vision deficiency, and red/green is
-     the pair most commonly confused — which is exactly the pair a compliance
+     the pair most commonly confused, which is exactly the pair a compliance
      dashboard reaches for first. */
   --ok: #0e7c66;
   --ok-wash: #eaf6f2;
@@ -92,6 +92,18 @@
   --radius-lg: 8px;
 
   --rail-width: 248px;
-  --masthead-height: 56px;
+
+  /* The masthead is two bands. A white brand band carries the KMC lockup at
+     full colour. The mark was designed for a light ground, and reversing it
+     out of the red as a silhouette threw away the only place the brand appears
+     in its actual form. The red action bar sits beneath it and holds the system
+     title, the signed-in role and sign out.
+
+     --masthead-height is their sum. Every offset in the shell measures from the
+     bottom of the whole header, so the two bands are an internal detail. */
+  --brand-band-height: 44px;
+  --action-bar-height: 56px;
+  --masthead-height: calc(var(--brand-band-height) + var(--action-bar-height));
+
   --content-max: 1440px;
 }

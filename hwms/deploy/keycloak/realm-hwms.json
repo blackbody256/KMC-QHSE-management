@@ -1,6 +1,7 @@
 {
   "realm": "hwms",
   "displayName": "KMC QHSE Management System",
+  "loginTheme": "kmc",
   "enabled": true,
   "sslRequired": "external",
   "registrationAllowed": false,

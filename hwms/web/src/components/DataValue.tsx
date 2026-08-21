@@ -1,7 +1,7 @@
 interface DataValueProps {
   /**
    * The measured, counted or computed value. Null renders as an em dash and
-   * never as zero — an absent figure and a figure of zero are different
+   * never as zero, an absent figure and a figure of zero are different
    * statements and the difference is frequently the whole finding.
    */
   value: number | string | null;
@@ -22,7 +22,7 @@ const sizeClass: Record<NonNullable<DataValueProps["size"]>, string> = {
  * Every measured value in the system renders through this component, in the
  * mono face with tabular figures. Columns of readings then align on the
  * decimal, a value is scannable against the limit in the row beneath, and
- * digit transposition becomes less likely — which matters when someone is
+ * digit transposition becomes less likely, which matters when someone is
  * reading back a blood pressure or comparing 35 against 3.5.
  */
 export function DataValue({ value, unit, context, size = "base", className = "" }: DataValueProps) {

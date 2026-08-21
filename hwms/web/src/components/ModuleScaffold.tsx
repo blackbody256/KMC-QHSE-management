@@ -69,7 +69,7 @@ export function ModuleScaffold({
             <Icon name="help" size={20} className="mt-0.5 shrink-0" />
             <div className="text-sm">
               <div className="font-semibold" style={{ color: "var(--caution)" }}>
-                Benchmark proposal — not approved by KMC
+                Benchmark proposal, not approved by KMC
               </div>
               <p className="mt-1 text-ink-muted">
                 The scope above is drawn from how this function is structured in comparable

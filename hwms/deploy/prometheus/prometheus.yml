@@ -1,7 +1,7 @@
 # Prometheus scrape configuration.
 #
 # Services expose route-templated request metrics. No metric label carries a
-# patient, encounter or incident identifier — separately from the privacy rule,
+# patient, encounter or incident identifier. Separately from the privacy rule,
 # unbounded label cardinality would destroy this database, so the two concerns
 # point the same way.
 
@@ -32,6 +32,27 @@ scrape_configs:
       - targets: ["clinical:8083"]
         labels:
           service: clinical
+
+  - job_name: admin
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["admin:8084"]
+        labels:
+          service: admin
+
+  - job_name: occupational
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["occupational:8085"]
+        labels:
+          service: occupational
+
+  - job_name: metrics
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["metrics:8086"]
+        labels:
+          service: metrics
 
   - job_name: prometheus
     static_configs:

@@ -43,6 +43,14 @@ func main() {
 		audience     = cfg.Optional("OIDC_AUDIENCE", "account")
 		databaseURL  = cfg.Required("CLINICAL_DATABASE_URL")
 		startupWait  = cfg.Duration("STARTUP_WAIT", 2*time.Minute)
+
+		// Delivery of sick-leave facts to the metrics service. Optional: with
+		// no metrics service configured the outbox simply accumulates, and a
+		// referral still records correctly. That is the right failure, the
+		// clinical record is the thing that must not depend on a dashboard.
+		metricsURL   = cfg.Optional("METRICS_SERVICE_URL", "")
+		ingestToken  = cfg.Optional("METRICS_INGEST_TOKEN", "")
+		publishEvery = cfg.Duration("LEAVE_PUBLISH_INTERVAL", 30*time.Second)
 	)
 
 	log := logging.New(serviceName, logLevel)
@@ -79,7 +87,23 @@ func main() {
 	// The raw store is constructed here and immediately wrapped. Nothing else
 	// in this service holds a reference to it, so there is no path to a
 	// clinical record that skips the access log.
-	svc := &service{log: log, store: &accessLoggedStore{raw: &store{pool: pool}}}
+	raw := &store{pool: pool}
+	svc := &service{log: log, store: &accessLoggedStore{raw: raw}}
+
+	// The outbox publisher is the exception, and a deliberate one. It reads
+	// referral_leave_outbox, which holds no clinical content at all, a
+	// referral identifier, a month and a number of days, so it does not
+	// belong behind the access log, and putting it there would record a
+	// clinical read that nobody performed.
+	if metricsURL != "" && ingestToken != "" {
+		publisher := newLeavePublisher(log, raw, metricsURL, ingestToken, publishEvery)
+		go publisher.Run(ctx)
+		log.Info("referral leave publisher started",
+			slog.String("metrics_url", metricsURL),
+			slog.Duration("interval", publishEvery))
+	} else {
+		log.Warn("no metrics service configured; referral sick leave will accumulate undelivered in the outbox")
+	}
 
 	metrics := telemetry.New(serviceName)
 	checks := health.NewSet()

@@ -69,7 +69,7 @@ export function LaboratoryPage() {
           </div>
         ) : requisitions.length === 0 ? (
           <div className="panel-body text-sm text-ink-muted">
-            No requisitions yet. Open a patient visit and raise the first one — patient information
+            No requisitions yet. Open a patient visit and raise the first one, patient information
             comes from the visit, so it is never typed twice.
           </div>
         ) : (

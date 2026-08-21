@@ -1,8 +1,8 @@
-# KIIRA MOTORS CORPORATION
+# Kiira Motors Corporation
 
-## Health and Wellness Management System
+## Health and Wellness management system
 
-### Production Build Plan
+### Production build plan
 
 **Version:** 1.3  
 **Date:** 7 August 2026  
@@ -135,37 +135,37 @@ Health-Related Absenteeism consumes the monthly return’s other health-related 
 
 Each phase is independently demonstrable and gated by its tests.
 
-### Phase 0 — Platform foundation
+### Phase 0: platform foundation
 
 Monorepo, service skeleton/library, Keycloak realm, databases, NATS/outbox, observability, CI, local Compose and staging.
 
 **Done when:** a user signs in through the gateway; role rejection is audited; all services produce health, logs, metrics and traces; a new developer runs the stack locally in under thirty minutes.
 
-### Phase 1 — Identity, audit and reference administration
+### Phase 1: identity, audit and reference administration
 
 Build `hwms-admin` and `hwms-audit`; configure roles/scopes; implement effective-dated KPI, hygiene and lab reference APIs/screens; append-only clinical access log.
 
 **Done when:** superseding a target/range leaves historical fixtures unchanged; source scans find no embedded decision thresholds; database roles reject audit UPDATE/DELETE; non-clinical roles cannot obtain clinical credentials.
 
-### Phase 2 — Clinical: visits, laboratory and referral
+### Phase 2: clinical visits, laboratory and referral
 
 Build `hwms-clinical` patient/visit, laboratory request/result, medical referral lifecycle, linked leave event and versioned PDF. Laboratory and referral are not later-release expansion items.
 
 **Done when:** an Officer raises request/referral from a signed visit without re-keying identity/vitals; a flagged abnormal result saves; changing a range does not change history; the referral completes all states; the PDF is recognised against the controlled form; leave is emitted once; every non-clinical role receives 403 on every clinical route. DEC-024 and DEC-029 are resolved before real data.
 
-### Phase 3 — Ergonomics and Industrial Hygiene
+### Phase 3: ergonomics and industrial hygiene
 
 Build `hwms-occupational` surveillance, disease count, ergonomic assessments/actions, monitoring events/readings and immutable reference evaluation.
 
 **Done when:** completeness and compliance are separate; a later limit revision does not change a stored reading outcome; ergonomic action timing derives OH4; no removed-division route or data contract exists.
 
-### Phase 4 — Returns, safety integration and dashboard
+### Phase 4: returns, safety integration and dashboard
 
 Build `hwms-metrics`, manual return with provenance, canonical safety adapter, nine KPI rows, YTD completeness, summary band, trends and viewer roles.
 
 **Done when:** missing is No data; incomplete YTD is not averaged; near-miss direction tests pass; referral leave reaches absenteeism once; the metrics service has no clinical credentials; DEC-027 determines the production source adapter.
 
-### Phase 5 — Reporting and readiness
+### Phase 5: reporting and readiness
 
 Generate monthly/quarterly PDF and spreadsheet reports, archive exact versions, complete backup/restore, security/privacy review, training, support handover and runbooks.
 
@@ -208,3 +208,17 @@ Rollback is by deployable version and reversible migration. Reference-data corre
 | DEC-029 laboratory forms/ranges | Real lab entry, clinical validation and training |
 | KMC ICT hosting/Keycloak/Grafana choices | Staging infrastructure completion |
 | Named business, data, technical and support owners | Production go-live |
+
+## 10. Recorded implementation divergences
+
+> **Implementation record.** This section describes the repository as built.
+> It does not revise or waive the planned production guarantees. Where the
+> repository records no reason for a divergence, the reason is stated as
+> unknown rather than inferred.
+
+| Planned position | Current implementation and reason | Consequence before production |
+|---|---|---|
+| Generate controlled PDFs server side from versioned templates and retain prior versions. | `web/src/lib/labPdf.ts`, `referralPdf.ts` and `patientHistoryPdf.ts` generate files in the browser with jsPDF. `web/src/lib/pdfChrome.ts` explains that this avoids a guessable PDF URL and uses data already returned through the audited clinical API. | There is no server template version or archived generated file, so exact reproduction and archival guarantees in Sections 4.3 and 5 are not met. Browser generation also does not create a separate export audit event. |
+| Deliver approved asynchronous facts through NATS JetStream plus a transactional outbox. | `services/clinical/publisher.go` drains `referral_leave_outbox` and sends direct HTTP to `/internal/leave-contributions`. The Compose stack runs no NATS service, so direct HTTP was used while preserving transactional capture and retry. | The current path is idempotent and retried, but it does not provide the broker durability, consumer offsets or replay model specified in Sections 2 and 8. |
+| Deploy `hwms-audit` separately with append-only database grants. | No `services/audit` deployable exists. `clinical_access_log` remains in the clinical database and is written by the same database role as clinical records. No `GRANT` or `REVOKE` statement prevents that role updating or deleting access rows. The repository records no reason for omitting the separate service and grants. | The code fails a clinical read when its log write fails, but the stored log is not append-only against its own service role. The Phase 1 audit isolation gate is not met. |
+| Keep k3s manifests deployable alongside the Compose stack. | Closed. `deploy/k8s` now defines all eight deployables, both database StatefulSets and per-caller network policies, and the ConfigMap carries `ADMIN_SERVICE_URL`, `OCCUPATIONAL_SERVICE_URL` and `METRICS_SERVICE_URL`. The metrics deployment receives no clinical credential and the ingest token is a secret reference. | The startup blocker is resolved. One item remains: the clinical database URL requires TLS and the clinical StatefulSet configures no server certificate, so ICT must supply certificates or approve a different connection policy before a real deployment. |

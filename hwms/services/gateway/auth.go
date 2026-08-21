@@ -114,7 +114,7 @@ func (g *gateway) handleCallback(w http.ResponseWriter, r *http.Request) {
 	// Keycloak places realm roles in realm_access on the access token and, by
 	// default, leaves them off the identity token entirely. Reading them from
 	// the identity token yields an empty list, which signs a user in with no
-	// role and no navigation — the failure this once produced in the field.
+	// role and no navigation, the failure this once produced in the field.
 	//
 	// Taking them from the access token also keeps the gateway's view of a
 	// caller identical to what the services downstream enforce on, since that

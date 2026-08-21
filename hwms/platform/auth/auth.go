@@ -53,6 +53,21 @@ type ctxKey string
 
 const subjectKey ctxKey = "subject"
 
+// HasAnyRole reports whether the subject holds at least one of the roles.
+//
+// The non-clinical services need this and the clinical one must never use it.
+// A route reachable by "the officer or the manager" is an operational route;
+// an individual clinical record is reachable by exactly one role, and stating
+// that as a list of one would invite a second entry.
+func (s Subject) HasAnyRole(roles ...string) bool {
+	for _, role := range roles {
+		if s.HasRole(role) {
+			return true
+		}
+	}
+	return false
+}
+
 // WithSubject returns a context carrying the authenticated caller.
 func WithSubject(ctx context.Context, s Subject) context.Context {
 	return context.WithValue(ctx, subjectKey, s)
@@ -99,7 +114,7 @@ type Verifier struct {
 // address the browser reached Keycloak on. discoveryURL is where this service
 // reaches Keycloak, which inside a container network is a different address
 // entirely. Where they differ, discovery is performed against the internal
-// address while validation still requires the external issuer — the token is
+// address while validation still requires the external issuer, the token is
 // checked against the issuer the browser actually used, which is the property
 // that matters.
 //
@@ -175,6 +190,19 @@ func (v *Verifier) Authenticate(next http.Handler) http.Handler {
 	})
 }
 
+// RequireAnyRoleCtx is the service-layer half of the double check for a route
+// open to more than one role.
+func RequireAnyRoleCtx(ctx context.Context, roles ...string) error {
+	s, ok := SubjectFrom(ctx)
+	if !ok {
+		return fmt.Errorf("%w: no authenticated subject", ErrForbidden)
+	}
+	if !s.HasAnyRole(roles...) {
+		return fmt.Errorf("%w: subject lacks any of %v", ErrForbidden, roles)
+	}
+	return nil
+}
+
 // RequireRole is the handler-layer half of the double check.
 func RequireRole(role string) func(http.Handler) http.Handler {
 	return RequireRoleWithMessage(role,
@@ -200,6 +228,29 @@ func RequireRoleWithMessage(role, detail string) func(http.Handler) http.Handler
 				return
 			}
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// RequireAnyRole permits a caller holding at least one of the given roles.
+//
+// Used by the operational services, where the officer records and the manager
+// reads. Read and write are separated by the route, not by this middleware:
+// a manager reaching a write route is refused by the handler that owns it.
+func RequireAnyRole(roles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s, ok := SubjectFrom(r.Context())
+			if !ok {
+				httpx.Problem(w, http.StatusUnauthorized, "Sign in to continue.")
+				return
+			}
+			if !s.HasAnyRole(roles...) {
+				httpx.Problem(w, http.StatusForbidden,
+					"This account does not have access to that function. Ask the manager if you believe it should.")
+				return
+			}
+			next.ServeHTTP(w, r.WithContext(r.Context()))
 		})
 	}
 }

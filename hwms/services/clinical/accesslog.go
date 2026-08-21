@@ -24,7 +24,7 @@ type accessLoggedStore struct{ raw *store }
 // logFailureIsReadFailure states the policy that the code below implements: if
 // the access log cannot be written, the read does not happen.
 //
-// The alternative — serve the record and carry on — means the system quietly
+// The alternative, serve the record and carry on, means the system quietly
 // stops being able to answer "who read this patient's record", which is the
 // one question the Data Protection and Privacy Act makes it answerable for.
 // Refusing the read is the conservative failure and it is the correct one.

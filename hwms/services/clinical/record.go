@@ -18,8 +18,8 @@ import (
 //
 // Before this existed, an officer reconstructing a patient's history had to
 // open the visit register, filter it, then open the laboratory register,
-// filter that, and hold the join in their head. The records are related —
-// a requisition is raised *from* a visit — and displaying them as three
+// filter that, and hold the join in their head. The records are related -
+// a requisition is raised *from* a visit, and displaying them as three
 // unrelated lists threw that relationship away at exactly the moment it
 // mattered.
 //
@@ -50,6 +50,11 @@ type TimelineEntry struct {
 	Summary      VisitSummary     `json:"summary"`
 	Completeness Completeness     `json:"completeness"`
 	Requisitions []LabRequisition `json:"requisitions"`
+	// Referrals raised from this visit, sitting beside the requisitions
+	// because they are the same kind of thing: a document the visit produced.
+	// An officer asking what happened after an attendance wants both, and
+	// wants them together.
+	Referrals []Referral `json:"referrals"`
 }
 
 // RecordSummary answers the questions asked before reading any detail: how
@@ -62,6 +67,10 @@ type RecordSummary struct {
 	WorkRelatedCount int    `json:"workRelatedCount"`
 	DraftVisits      int    `json:"draftVisits"`
 	AwaitingResults  int    `json:"awaitingResults"`
+	// Referrals that have not yet been reviewed. The question behind it is
+	// "is this patient still out there somewhere", which is worth answering
+	// before any detail is read.
+	OpenReferrals int `json:"openReferrals"`
 }
 
 type PatientRecord struct {
@@ -72,6 +81,8 @@ type PatientRecord struct {
 	// rather than dropped: a result nobody can find is worse than an untidy
 	// list.
 	Unlinked []LabRequisition `json:"unlinked"`
+	// Referrals whose visit is outside the window, for the same reason.
+	UnlinkedReferrals []Referral `json:"unlinkedReferrals"`
 }
 
 // summaryFields are the sections a timeline entry quotes from.
@@ -151,6 +162,11 @@ func (s *store) patientRecord(ctx context.Context, patientID string, limit int) 
 		return PatientRecord{}, err
 	}
 
+	referrals, err := s.listReferrals(ctx, patientID, "", "", limit)
+	if err != nil {
+		return PatientRecord{}, err
+	}
+
 	visitIDs := make([]string, 0, len(visits))
 	for _, visit := range visits {
 		visitIDs = append(visitIDs, visit.ID)
@@ -171,7 +187,17 @@ func (s *store) patientRecord(ctx context.Context, patientID string, limit int) 
 		byVisit[requisition.VisitID] = append(byVisit[requisition.VisitID], requisition)
 	}
 
-	record := PatientRecord{Patient: patient, Timeline: []TimelineEntry{}, Unlinked: []LabRequisition{}}
+	referralsByVisit := map[string][]Referral{}
+	for _, referral := range referrals {
+		referralsByVisit[referral.VisitID] = append(referralsByVisit[referral.VisitID], referral)
+	}
+
+	record := PatientRecord{
+		Patient:           patient,
+		Timeline:          []TimelineEntry{},
+		Unlinked:          []LabRequisition{},
+		UnlinkedReferrals: []Referral{},
+	}
 	known := map[string]bool{}
 
 	for _, visit := range visits {
@@ -188,9 +214,13 @@ func (s *store) patientRecord(ctx context.Context, patientID string, limit int) 
 			Summary:      summaries[visit.ID],
 			Completeness: Completeness{Decided: decided, Total: len(SectionCodes)},
 			Requisitions: byVisit[visit.ID],
+			Referrals:    referralsByVisit[visit.ID],
 		}
 		if entry.Requisitions == nil {
 			entry.Requisitions = []LabRequisition{}
+		}
+		if entry.Referrals == nil {
+			entry.Referrals = []Referral{}
 		}
 		record.Timeline = append(record.Timeline, entry)
 
@@ -215,6 +245,15 @@ func (s *store) patientRecord(ctx context.Context, patientID string, limit int) 
 		}
 		if requisition.Status != "resulted" {
 			record.Summary.AwaitingResults++
+		}
+	}
+
+	for _, referral := range referrals {
+		if !known[referral.VisitID] {
+			record.UnlinkedReferrals = append(record.UnlinkedReferrals, referral)
+		}
+		if referral.Status != ReferralReviewed {
+			record.Summary.OpenReferrals++
 		}
 	}
 

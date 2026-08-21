@@ -69,7 +69,7 @@ export function AccountsPage() {
       const created = await identityApi.createAccount(form);
       setAccounts((current) => [created, ...current]);
       setConfirmation(
-        `Account created for ${created.email}. Give them the temporary password directly — it is not sent by email, and they must change it when they first sign in.`,
+        `Account created for ${created.email}. Give them the temporary password directly. It is not sent by email, and they must change it when they first sign in.`,
       );
       setForm({ ...emptyForm, role: form.role });
     } catch (error) {

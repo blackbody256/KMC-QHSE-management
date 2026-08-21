@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
+import { today } from "../lib/dates";
 import { Icon } from "../components/Icon";
 import { ApiError, clinicalApi, type Patient, type VisitType } from "../lib/api";
 
@@ -30,7 +31,9 @@ export function NewVisitPage() {
   const now = new Date();
   const [form, setForm] = useState({
     patientId: preselected,
-    visitDate: now.toISOString().slice(0, 10),
+    // Local, not UTC: at Kampala's UTC+3 an early-morning visit would
+    // otherwise be dated to the previous day.
+    visitDate: today(),
     timeIn: now.toTimeString().slice(0, 5),
     visitType: "Walk-in" as VisitType,
     workRelated: "Unsure" as "Yes" | "No" | "Unsure",

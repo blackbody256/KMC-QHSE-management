@@ -10,7 +10,7 @@ import { Icon } from "../components/Icon";
  *
  * What differs from the prototype is what the right panel does. This page
  * collects no credentials. It hands the browser to Keycloak, which owns
- * password policy, lockout, multi-factor and — later — corporate single
+ * password policy, lockout, multi-factor and, later, corporate single
  * sign-on. The application never sees a password, which is both safer and the
  * reason moving to corporate sign-on later is a configuration change rather
  * than a release.
@@ -36,7 +36,7 @@ export function LoginPage() {
     <main className="grid min-h-screen lg:grid-cols-[minmax(360px,0.9fr)_minmax(480px,1.1fr)]"
           style={{ background: "var(--dark)" }}>
       {/* Branded panel. The KMC mark sits here, top left, at full colour on a
-          dark ground — the arrangement the client signed off. */}
+          dark ground, the arrangement the client signed off. */}
       <section
         className="relative flex min-h-screen flex-col justify-between px-8 py-12 lg:px-[clamp(32px,5vw,76px)]"
         style={{
@@ -86,7 +86,7 @@ export function LoginPage() {
           <div className="flex flex-col gap-1">
             <strong className="text-[0.78rem]">Access follows the signed-in role</strong>
             <span className="text-[0.7rem] leading-[1.5]" style={{ color: "var(--dark-ink-muted)" }}>
-              Individual clinical records — patients, visits, laboratory results and referrals — are
+              Individual clinical records, patients, visits, laboratory results and referrals, are
               open to the Health and Wellness Officer only. Every retrieval is logged.
             </span>
           </div>
@@ -146,7 +146,7 @@ export function LoginPage() {
           <div className="mt-8 border-t border-rule pt-6 text-xs leading-relaxed text-ink-muted">
             <p>
               Accounts are created by the Health and Wellness manager. If you cannot sign in, or your
-              account opens nothing, ask the manager rather than ICT — role assignment is theirs.
+              account opens nothing, ask the manager rather than ICT, role assignment is theirs.
             </p>
           </div>
         </div>

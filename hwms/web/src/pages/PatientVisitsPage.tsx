@@ -46,7 +46,7 @@ export function PatientVisitsPage() {
   return (
     <>
       <PageHeader
-        title={patientName ? `Visits — ${patientName}` : "Patient visits"}
+        title={patientName ? `Visits, ${patientName}` : "Patient visits"}
         description="Clinic attendances in the order of the paper form. Signing locks the record; correction is by appended amendment."
         actions={
           <Link

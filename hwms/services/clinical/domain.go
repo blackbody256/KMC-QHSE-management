@@ -104,8 +104,8 @@ func ValidSectionCode(code string) bool {
 	return false
 }
 
-// Completeness counts sections that carry a clinical decision — completed or
-// explicitly not indicated — against the total. A section marked not indicated
+// Completeness counts sections that carry a clinical decision, completed or
+// explicitly not indicated, against the total. A section marked not indicated
 // counts as decided, because deciding a section does not apply is a clinical
 // act and recording it is the point of ADR-09.
 func (v Visit) Completeness() (decided int, total int) {

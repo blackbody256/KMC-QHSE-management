@@ -58,7 +58,7 @@
   }
 
   /* Structure comes from hairlines and whitespace. No drop shadows and no
-     gradients in the content area — both read as consumer software and cost
+     gradients in the content area. Both read as consumer software and cost
      vertical rhythm in a dense data view. */
   .panel-head {
     display: flex;
@@ -178,6 +178,20 @@
 }
 
 @layer utilities {
+  /* Announced but not shown. Used for live regions that report the result of a
+     filter, where the visual answer is already on screen. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
   .icon {
     display: inline-block;
     flex: none;

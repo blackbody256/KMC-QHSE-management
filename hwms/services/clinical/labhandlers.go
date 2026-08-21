@@ -193,7 +193,6 @@ func (s *service) handleCreateRequisition(w http.ResponseWriter, r *http.Request
 
 	s.log.Info("laboratory requisition raised",
 		slog.String("actor", subject.Username),
-		slog.String("requisition_id", created.ID),
 		slog.Int("investigations", len(created.Tests)),
 	)
 	httpx.JSON(w, http.StatusCreated, created)

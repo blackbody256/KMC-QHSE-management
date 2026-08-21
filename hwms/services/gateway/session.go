@@ -30,7 +30,7 @@ type session struct {
 // This implementation is in-memory and therefore single-instance: two gateway
 // replicas would not share sessions, and a restart signs everybody out.
 // Before the gateway is scaled beyond one replica, replace this with a shared
-// store — Postgres or Redis — behind the same three methods. The interface is
+// store, Postgres or Redis, behind the same three methods. The interface is
 // small precisely so that swap is cheap.
 type sessionStore struct {
 	mu       sync.RWMutex
@@ -85,7 +85,7 @@ func (s *sessionStore) delete(id string) {
 }
 
 // touch extends an active session. Inactivity, not age, ends a session, per
-// FR-SEC-07 — Infirmary workstations are shared space and an idle timeout is
+// FR-SEC-07. Infirmary workstations are shared space and an idle timeout is
 // the control that matters there.
 func (s *sessionStore) touch(id string) {
 	s.mu.Lock()

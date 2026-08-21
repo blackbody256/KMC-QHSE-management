@@ -6,6 +6,7 @@ package httpx
 import (
 	"context"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -56,9 +57,17 @@ func Recoverer(log *slog.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if rec := recover(); rec != nil {
+					// The route template, never the path. A panic on
+					// /api/clinical/patients/{id}/record would otherwise put a
+					// patient identifier into the one log line most likely to
+					// be copied into a ticket and mailed around.
+					route := "unmatched"
+					if ctx := chi.RouteContext(r.Context()); ctx != nil && ctx.RoutePattern() != "" {
+						route = ctx.RoutePattern()
+					}
 					log.Error("panic recovered",
 						slog.String("request_id", RequestIDFrom(r.Context())),
-						slog.String("path", r.URL.Path),
+						slog.String("route", route),
 						slog.Any("panic", rec),
 						slog.String("stack", string(debug.Stack())),
 					)
@@ -71,19 +80,38 @@ func Recoverer(log *slog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// RequestLogger records method, path, status and duration. It deliberately
-// records neither query strings nor bodies, because either may carry clinical
-// content on a clinical route.
+// RequestLogger records method, route, status and duration.
+//
+// The route template is logged, never the concrete path. On a clinical route
+// the path itself is the disclosure: /api/clinical/patients/{id}/record names a
+// patient, and a log line naming a patient is a clinical record held outside
+// the clinical access ledger and outside the controls that ledger has. Logged
+// as the template, the same request reads as
+// /api/clinical/patients/{id}/record and says only that somebody opened a
+// record, which is what a service log is for. Who opened whose record is the
+// ledger's question, and the ledger is where it is answerable.
+//
+// Query strings and bodies are recorded nowhere, for the same reason.
 func RequestLogger(log *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 			sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 			next.ServeHTTP(sw, r)
+
+			// The pattern is only known after routing, so it is read here
+			// rather than before the handler runs. A request that matched no
+			// route has no pattern, and its path is not logged either, an
+			// unmatched path is just as capable of carrying an identifier.
+			route := "unmatched"
+			if ctx := chi.RouteContext(r.Context()); ctx != nil && ctx.RoutePattern() != "" {
+				route = ctx.RoutePattern()
+			}
+
 			log.Info("request",
 				slog.String("request_id", RequestIDFrom(r.Context())),
 				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
+				slog.String("route", route),
 				slog.Int("status", sw.status),
 				slog.Duration("duration", time.Since(start)),
 			)

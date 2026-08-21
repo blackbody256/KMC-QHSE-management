@@ -48,6 +48,24 @@ var clinicalRoutes = []struct {
 	{http.MethodPost, "/api/clinical/lab/requisitions", `{"visitId":"x","patientId":"y","requestDate":"2026-08-07","testCodes":["BS"]}`},
 	{http.MethodGet, "/api/clinical/lab/requisitions/11111111-1111-1111-1111-111111111111", ""},
 	{http.MethodPut, "/api/clinical/lab/requisitions/11111111-1111-1111-1111-111111111111/results", `{"results":{}}`},
+	// A referral carries the patient's name, employer, provisional diagnosis,
+	// HIV status and mental health condition, and it is the one clinical
+	// document that leaves the building. Section C of the printed form asks
+	// two management roles to sign it, which is exactly the conflict DEC-024
+	// exists to settle, so until it is settled, every route below refuses
+	// every role but the officer, and these assertions are what proves it.
+	{http.MethodGet, "/api/clinical/referrals/form", ""},
+	{http.MethodGet, "/api/clinical/referrals", ""},
+	{http.MethodPost, "/api/clinical/referrals", `{"visitId":"x","patientId":"y","referredTo":"Mulago","referralDate":"2026-08-21"}`},
+	{http.MethodGet, "/api/clinical/referrals/11111111-1111-1111-1111-111111111111", ""},
+	// The minimum-disclosure summary is narrower than the referral, but it is
+	// still a clinical retrieval and still names a patient. It is covered
+	// here, not exempted for being a summary.
+	{http.MethodGet, "/api/clinical/referrals/11111111-1111-1111-1111-111111111111/authorisation-summary", ""},
+	{http.MethodPost, "/api/clinical/referrals/11111111-1111-1111-1111-111111111111/authorisation", `{"headOfDivision":{"name":"A"},"chiefOfStaff":{"name":"B"}}`},
+	{http.MethodPost, "/api/clinical/referrals/11111111-1111-1111-1111-111111111111/issue", ""},
+	{http.MethodPut, "/api/clinical/referrals/11111111-1111-1111-1111-111111111111/feedback", `{"facility":"Mulago"}`},
+	{http.MethodPut, "/api/clinical/referrals/11111111-1111-1111-1111-111111111111/review", `{"reviewedBy":"A"}`},
 }
 
 // newTestRouter builds the real route tree with a nil store.
@@ -119,7 +137,7 @@ func TestNonOfficerRolesAreRefusedOnEveryClinicalRoute(t *testing.T) {
 				router.ServeHTTP(rec, req)
 
 				if rec.Code != http.StatusForbidden {
-					t.Fatalf("expected 403, got %d — %s", rec.Code, rec.Body.String())
+					t.Fatalf("expected 403, got %d, %s", rec.Code, rec.Body.String())
 				}
 			})
 		}
@@ -159,7 +177,7 @@ func TestOfficerPassesTheRoleCheck(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
-		t.Fatalf("the officer must not be refused: got %d — %s", rec.Code, rec.Body.String())
+		t.Fatalf("the officer must not be refused: got %d, %s", rec.Code, rec.Body.String())
 	}
 
 	var body struct {
@@ -177,7 +195,7 @@ func TestOfficerPassesTheRoleCheck(t *testing.T) {
 // exists that the refusal test above does not exercise.
 //
 // Without this, adding a clinical route silently escapes the access-control
-// suite — and the route most likely to be added in a hurry is exactly the one
+// suite, and the route most likely to be added in a hurry is exactly the one
 // that most needs covering.
 func TestEveryRouteIsCovered(t *testing.T) {
 	svc := &service{log: discardLogger(), store: nil}

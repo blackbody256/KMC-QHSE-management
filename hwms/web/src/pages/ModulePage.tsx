@@ -23,7 +23,7 @@ const content: Record<string, ModuleContent> = {
     plannedRecords: [
       "Test requests raised from a visit, with specimen type, tests requested and clinical indication",
       "Whether the request is routine or urgent",
-      "Surveillance context: pre-employment, periodic, exit, or incident — linking a test to the surveillance programme",
+      "Surveillance context: pre-employment, periodic, exit, or incident. Linking a test to the surveillance programme",
       "Results, one row per analyte, with value, unit and verifying practitioner",
       "The reference range applied, held as effective-dated reference data and stored against the result",
       "Abnormality flagged against that range, written once and never recomputed when a range is later revised",

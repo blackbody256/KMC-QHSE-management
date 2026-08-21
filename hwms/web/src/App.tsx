@@ -13,6 +13,12 @@ import { VisitDetailPage } from "./pages/VisitDetailPage";
 import { LaboratoryPage } from "./pages/LaboratoryPage";
 import { NewLabRequestPage } from "./pages/NewLabRequestPage";
 import { LabRequisitionPage } from "./pages/LabRequisitionPage";
+import { ReferralsPage } from "./pages/ReferralsPage";
+import { NewReferralPage } from "./pages/NewReferralPage";
+import { ReferralDetailPage } from "./pages/ReferralDetailPage";
+import { IndustrialHygienePage } from "./pages/IndustrialHygienePage";
+import { ErgonomicsPage } from "./pages/ErgonomicsPage";
+import { MonthlyReturnsPage } from "./pages/MonthlyReturnsPage";
 import { ForbiddenPage } from "./pages/ForbiddenPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { allRoutes, canOpen, homePathFor } from "./lib/navigation";
@@ -50,10 +56,22 @@ function elementFor(path: string) {
       return <NewLabRequestPage />;
     case "/laboratory/details":
       return <LabRequisitionPage />;
+    case "/referrals":
+      return <ReferralsPage />;
+    case "/referrals/new":
+      return <NewReferralPage />;
+    case "/referrals/details":
+      return <ReferralDetailPage />;
+    case "/industrial-hygiene":
+      return <IndustrialHygienePage />;
+    case "/ergonomics-wellness":
+      return <ErgonomicsPage />;
+    case "/monthly-returns":
+      return <MonthlyReturnsPage />;
     default:
-      // Laboratory, referrals, industrial hygiene, ergonomics and monthly
-      // returns are routed and access-controlled, but not yet built. They say
-      // so rather than showing an invented figure.
+      // Every route in the navigation now has a page. ModulePage remains for
+      // a route added to the table before its screen exists: it says so
+      // rather than showing an invented figure.
       return <ModulePage />;
   }
 }
@@ -85,6 +103,14 @@ function NoRoleAssigned() {
   const { user, signOut } = useSession();
   return (
     <div className="mx-auto max-w-form px-6 py-16">
+      {/* This page renders outside the shell, so it carries the mark itself.
+          Someone who lands here has signed in successfully and should be able
+          to see they are in the right system. */}
+      <img
+        src="/kmc-logo-rgb.png"
+        alt="Kiira Motors Corporation"
+        className="mb-8 h-8 w-auto"
+      />
       <h1 className="text-xl">This account has no role yet</h1>
       <p className="mt-3 text-sm text-ink-muted">
         You are signed in as {user?.name ?? user?.username}, but no role has been assigned to the
@@ -112,7 +138,7 @@ export default function App() {
         element={
           // Redirect away from sign-in only when there is somewhere to go. An
           // authenticated account with no role has no home path, and
-          // redirecting it to /login would bounce between the two forever —
+          // redirecting it to /login would bounce between the two forever -
           // which is precisely what happened the first time a real account
           // signed in without a role.
           status === "authenticated" && role !== null ? (

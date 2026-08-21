@@ -1,4 +1,25 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: hwms
+data:
+  01-create-databases.sql: |
+    -- The shared instance still gives every service its own database. This
+    -- file only runs for an empty volume, so an existing cluster uses the
+    -- documented one-time creation command instead.
+    SELECT 'CREATE DATABASE keycloak'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\gexec
+    SELECT 'CREATE DATABASE identity'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'identity')\gexec
+    SELECT 'CREATE DATABASE admin'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'admin')\gexec
+    SELECT 'CREATE DATABASE occupational'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'occupational')\gexec
+    SELECT 'CREATE DATABASE metrics'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'metrics')\gexec
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: postgres
@@ -47,9 +68,17 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
+            - name: init-databases
+              mountPath: /docker-entrypoint-initdb.d/01-create-databases.sql
+              subPath: 01-create-databases.sql
+              readOnly: true
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { memory: 1Gi }
+      volumes:
+        - name: init-databases
+          configMap:
+            name: postgres-init
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -60,7 +89,7 @@ spec:
             storage: 20Gi
 ---
 # The clinical database. A separate instance with separate credentials, per
-# DR-03 — not a separate database on the instance above. The reason for the
+# DR-03, not a separate database on the instance above. The reason for the
 # separation is legal rather than architectural, and sharing an instance would
 # leave one credential leak between an unrelated service and a patient record.
 apiVersion: v1

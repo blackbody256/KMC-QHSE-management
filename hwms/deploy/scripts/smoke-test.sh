@@ -3,8 +3,8 @@
 # Phase 0 acceptance checks against a running stack.
 #
 # These are the criteria from Section 6 of the production build plan that can
-# be verified without a browser. The remaining one — that a user signs in
-# through Keycloak and lands on a role-appropriate page — needs a person, and
+# be verified without a browser. The remaining one, that a user signs in
+# through Keycloak and lands on a role-appropriate page, needs a person, and
 # is listed at the end rather than pretended at here.
 #
 # Usage: ./deploy/scripts/smoke-test.sh
@@ -42,7 +42,7 @@ check "identity provider realm resolves" "200" "$(status "${KEYCLOAK}/realms/${R
 echo
 echo "Health"
 # Deliberately not ${APP}/livez. nginx proxies only /auth and /api, so any
-# other path falls through to the single-page application and returns 200 —
+# other path falls through to the single-page application and returns 200 -
 # which would pass this check while telling us nothing about the gateway.
 # /auth/session is proxied, so reaching it proves the gateway is answering.
 # Kubernetes probes hit /livez and /readyz on the pod directly, not through

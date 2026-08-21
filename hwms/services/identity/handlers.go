@@ -59,7 +59,7 @@ type service struct {
 }
 
 func (s *service) routes(r chi.Router) {
-	// Handler-layer check. The service methods check again — see the note in
+	// Handler-layer check. The service methods check again, see the note in
 	// platform/auth about why that is not redundant.
 	r.Use(auth.RequireRole(auth.RoleManager))
 

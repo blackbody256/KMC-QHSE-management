@@ -44,7 +44,7 @@ const director: Role = "hwms-director";
 
 /**
  * Clinical routes. Individual clinical records are open to the Health and
- * Wellness Officer alone — not the manager, not the director, not an
+ * Wellness Officer alone, not the manager, not the director, not an
  * administrator. This is the rule the whole access design exists to protect,
  * and it is enforced again at the service layer and proved by test.
  */

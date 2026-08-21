@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { LabCatalogue, LabRequisition } from "./api";
+import { drawDocumentFooter, drawLetterhead } from "./pdfChrome";
 
 /**
  * Reproduces KMC.DQHSE.05/26-FM008 closely enough that somebody who uses the
@@ -11,7 +12,10 @@ import type { LabCatalogue, LabRequisition } from "./api";
  * rather than omitted. The printed form lists everything the clinic offers,
  * and a sheet showing only the ticked lines would not be the same document.
  */
-export function downloadLabRequisitionPdf(requisition: LabRequisition, catalogue: LabCatalogue) {
+export async function downloadLabRequisitionPdf(
+  requisition: LabRequisition,
+  catalogue: LabCatalogue,
+) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -50,24 +54,11 @@ export function downloadLabRequisitionPdf(requisition: LabRequisition, catalogue
     doc.setFontSize(8.5);
   };
 
-  doc.setDrawColor(45, 55, 72);
-  doc.setLineWidth(0.35);
-  doc.rect(margin, 8, contentWidth, 26);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("DEPARTMENT OF QUALITY HEALTH SAFETY AND ENVIRONMENT MANAGEMENT", pageWidth / 2, 14, {
-    align: "center",
+  y = await drawLetterhead(doc, {
+    subtitle: "Occupational Health & Wellness Clinic – Laboratory Requisition Form",
+    formNumber: requisition.formNumber,
+    margin,
   });
-  doc.text("HEALTH AND WELLNESS DIVISION", pageWidth / 2, 19.5, { align: "center" });
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.text("Occupational Health & Wellness Clinic – Laboratory Requisition Form", pageWidth / 2, 25, {
-    align: "center",
-  });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text(requisition.formNumber, pageWidth / 2, 30.5, { align: "center" });
-  y = 41;
 
   sectionTitle("Patient Information");
   const rows: [string, string][] = [
@@ -177,17 +168,13 @@ export function downloadLabRequisitionPdf(requisition: LabRequisition, catalogue
   doc.setFont("helvetica", "normal");
   doc.text(requisition.timeOfCollection || " ", margin + contentWidth - 20, y);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.text(
-    "CONFIDENTIAL: This clinical document is restricted to the Health and Wellness Officer and the laboratory.",
+  drawDocumentFooter(
+    doc,
     margin,
-    pageHeight - 9,
-    { maxWidth: contentWidth - 20 },
+    "CONFIDENTIAL: This clinical document is restricted to the Health and Wellness Officer and the laboratory.",
   );
-  doc.setFont("helvetica", "normal");
-  doc.text(`Page ${doc.getNumberOfPages()}`, pageWidth - margin, pageHeight - 9, { align: "right" });
 
-  const safeName = requisition.patientSnapshot.fullName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-  doc.save(`lab-requisition-${safeName}-${requisition.requestDate}.pdf`);
+  // No patient name in the filename: it travels through mail clients and file
+  // listings without the confidentiality declaration printed inside.
+  doc.save(`lab-requisition-${requisition.formNumber}-${requisition.requestDate}.pdf`);
 }

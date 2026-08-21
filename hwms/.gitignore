@@ -15,6 +15,16 @@ node_modules/
 *.test
 *.out
 
+# Compiled service binaries. "go build ./services/admin/..." drops one in the
+# module root; the images are built by "make images" and nothing here is an
+# artefact anyone should commit.
+/admin
+/clinical
+/gateway
+/identity
+/metrics
+/occupational
+
 # Login imagery is supplied per deployment and is not source. The README in
 # that directory states what is expected.
 web/public/images/*.jpg

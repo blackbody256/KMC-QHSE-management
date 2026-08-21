@@ -26,10 +26,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    ports:
+      # Loopback publication lets the opt-in integration tests exercise the
+      # same databases as the services without exposing Postgres on the LAN.
+      - "127.0.0.1:${SHARED_POSTGRES_PORT:-55432}:5432"
     restart: unless-stopped
 
   # The clinical database runs as a separate instance with separate
-  # credentials, per DR-03. Not a separate database on the shared instance — a
+  # credentials, per DR-03. Not a separate database on the shared instance, a
   # separate instance. The reason for the separation is legal rather than
   # architectural, and a shared instance would leave one credential leak
   # between an unrelated service and a patient record.
@@ -46,6 +50,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    ports:
+      - "127.0.0.1:${CLINICAL_POSTGRES_PORT:-55433}:5432"
     restart: unless-stopped
 
   keycloak:
@@ -66,6 +72,12 @@ services:
       KC_HEALTH_ENABLED: "true"
     volumes:
       - ./deploy/keycloak/realm-hwms.json:/opt/keycloak/data/import/realm-hwms.json:ro
+      # The KMC login theme. Mounted at its own path rather than over the whole
+      # themes directory, so nothing shipped with Keycloak is shadowed.
+      #
+      # start-dev disables theme caching, so an edit to a template or the
+      # stylesheet shows on a refresh without restarting the container.
+      - ./deploy/keycloak/themes/kmc:/opt/keycloak/themes/kmc:ro
     ports:
       # Exposed so the browser can reach the sign-in page and so the seed
       # script can run from the host.
@@ -92,8 +104,8 @@ services:
       # composed stack that means the host-visible address, reachable from
       # inside the network via the alias below.
       # Keycloak is reached at the same hostname by the browser and by the
-      # services. That requires one line in the developer's /etc/hosts — see
-      # the README — and it is worth the step: a split between an internal and
+      # services. That requires one line in the developer's /etc/hosts, see
+      # the README, and it is worth the step: a split between an internal and
       # an external address for the identity provider is the classic cause of
       # "token issued by an unexpected issuer" on a first run, and it does not
       # exist in production, where Keycloak has one DNS name.
@@ -107,6 +119,9 @@ services:
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8090}
       IDENTITY_SERVICE_URL: http://identity:8082
       CLINICAL_SERVICE_URL: http://clinical:8083
+      ADMIN_SERVICE_URL: http://admin:8084
+      OCCUPATIONAL_SERVICE_URL: http://occupational:8085
+      METRICS_SERVICE_URL: http://metrics:8086
       # Plain HTTP locally. Production terminates TLS at the ingress and this
       # is true, per NFR-SEC-01.
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
@@ -115,6 +130,9 @@ services:
       - keycloak
       - identity
       - clinical
+      - admin
+      - occupational
+      - metrics
     restart: unless-stopped
 
   clinical:
@@ -133,6 +151,12 @@ services:
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-account}
       # The only service issued these credentials.
       CLINICAL_DATABASE_URL: postgres://${CLINICAL_DB_USER:-hwms_clinical}:${CLINICAL_DB_PASSWORD:-clinical-development-password}@postgres-clinical:5432/clinical?sslmode=disable
+      # Delivery of recommended sick leave to the metrics service, from the
+      # transactional outbox. Four fields travel, referral id, version,
+      # month, days, and a contract test on each side fails the build if
+      # either widens.
+      METRICS_SERVICE_URL: http://metrics:8086
+      METRICS_INGEST_TOKEN: ${METRICS_INGEST_TOKEN:-development-only-metrics-ingest-secret-rotate-me}
     depends_on:
       postgres-clinical:
         condition: service_healthy
@@ -153,8 +177,8 @@ services:
       IDENTITY_ADDR: ":8082"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # Keycloak is reached at the same hostname by the browser and by the
-      # services. That requires one line in the developer's /etc/hosts — see
-      # the README — and it is worth the step: a split between an internal and
+      # services. That requires one line in the developer's /etc/hosts, see
+      # the README, and it is worth the step: a split between an internal and
       # an external address for the identity provider is the classic cause of
       # "token issued by an unexpected issuer" on a first run, and it does not
       # exist in production, where Keycloak has one DNS name.
@@ -175,6 +199,100 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  # Effective-dated reference data: KPI targets and exposure limits.
+  #
+  # Small on purpose. Every threshold in the system is a decision by somebody
+  # outside engineering, and putting them all behind one service with one owner
+  # is what makes ADR-08 enforceable rather than aspirational.
+  admin:
+    build:
+      context: .
+      dockerfile: services/admin/Dockerfile
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
+    environment:
+      ADMIN_ADDR: ":8084"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8180/realms/hwms}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-account}
+      ADMIN_DATABASE_URL: postgres://${POSTGRES_USER:-hwms}:${POSTGRES_PASSWORD:-hwms-development-password}@postgres:5432/admin?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    restart: unless-stopped
+
+  # Ergonomics and industrial hygiene. Holds no clinical content and no
+  # clinical credential: a noise reading is a fact about a place.
+  occupational:
+    build:
+      context: .
+      dockerfile: services/occupational/Dockerfile
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
+    environment:
+      OCCUPATIONAL_ADDR: ":8085"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8180/realms/hwms}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-account}
+      OCCUPATIONAL_DATABASE_URL: postgres://${POSTGRES_USER:-hwms}:${POSTGRES_PASSWORD:-hwms-development-password}@postgres:5432/occupational?sslmode=disable
+      # Every reading resolves the limit in force on its date through here,
+      # then copies the answer onto the row.
+      ADMIN_SERVICE_URL: http://admin:8084
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      admin:
+        condition: service_started
+    restart: unless-stopped
+
+  # Monthly returns and the dashboard.
+  #
+  # Note what is not in this block: no clinical database URL and no clinical
+  # credential of any kind. This service computes health-related absenteeism
+  # without ever being able to read a patient record, which is the property
+  # that lets a director open the dashboard.
+  metrics:
+    build:
+      context: .
+      dockerfile: services/metrics/Dockerfile
+      # Build on the host network. Docker's build network cannot reach a
+      # systemd-resolved stub at 127.0.0.53, so dependency downloads time out
+      # on some Linux hosts while the host itself resolves perfectly well.
+      # Building on the host network sidesteps that entirely.
+      network: host
+    environment:
+      METRICS_ADDR: ":8086"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8180/realms/hwms}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-account}
+      METRICS_DATABASE_URL: postgres://${POSTGRES_USER:-hwms}:${POSTGRES_PASSWORD:-hwms-development-password}@postgres:5432/metrics?sslmode=disable
+      ADMIN_SERVICE_URL: http://admin:8084
+      OCCUPATIONAL_SERVICE_URL: http://occupational:8085
+      # Shared secret for the clinical service's outbox delivery, on the
+      # internal network only. Development grade: production replaces it with
+      # a Keycloak service account. It is never routed through the gateway.
+      METRICS_INGEST_TOKEN: ${METRICS_INGEST_TOKEN:-development-only-metrics-ingest-secret-rotate-me}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      admin:
+        condition: service_started
+      occupational:
+        condition: service_started
+    restart: unless-stopped
+
   web:
     build:
       context: ./web
@@ -188,7 +306,7 @@ services:
       # developer machine, and losing a first run to a port clash with an
       # unrelated project is a poor introduction to the system. Override with
       # WEB_PORT, and change APP_BASE_URL and the realm redirect URI together
-      # if you do — all three have to agree or sign-in is refused.
+      # if you do. All three have to agree or sign-in is refused.
       - "${WEB_PORT:-8090}:8080"
     depends_on:
       - gateway

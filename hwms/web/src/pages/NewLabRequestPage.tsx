@@ -12,7 +12,7 @@ import {
 } from "../lib/api";
 
 /**
- * Raising a laboratory requisition — KMC.DQHSE.05/26-FM008.
+ * Raising a laboratory requisition, KMC.DQHSE.05/26-FM008.
  *
  * The officer completes patient information, ticks the investigations, writes
  * the clinical summary and authorises. The Results column and the "For

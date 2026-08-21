@@ -19,7 +19,7 @@ const categories: { value: PatientCategory; label: string; description: string }
  *
  * Only four things are required: name, age, sex and category. Organisational
  * details are optional and the staff number is optional for every category,
- * per FR-PAT-04. Emergency presentation must never be blocked by data entry —
+ * per FR-PAT-04. Emergency presentation must never be blocked by data entry -
  * a patient who cannot be registered is a patient treated with no record at
  * all, which is worse than an incomplete one.
  */
@@ -73,7 +73,7 @@ export function NewPatientPage() {
     <>
       <PageHeader
         title="Register patient"
-        description="Name, age, sex and category are enough to register. Everything else can follow — care is never blocked by data entry."
+        description="Name, age, sex and category are enough to register. Everything else can follow. Care is never blocked by data entry."
       />
 
       <form className="max-w-form space-y-6" onSubmit={submit}>

@@ -72,7 +72,7 @@ interface IconProps {
   style?: React.CSSProperties;
   /**
    * Icons are decorative by default. An icon that carries meaning on its own
-   * has already broken the rule that status is a glyph plus a word — so where
+   * has already broken the rule that status is a glyph plus a word, so where
    * a label is genuinely absent, pass one here and it is announced.
    */
   label?: string;

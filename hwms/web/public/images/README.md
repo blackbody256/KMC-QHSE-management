@@ -1,6 +1,6 @@
 # Login imagery
 
-Drop the login panel photograph in this directory. The interface renders correctly without it — the panel falls back to a deep brand-tinted surface with the KMC mark — so a missing file is never a broken screen.
+Drop the login panel photograph in this directory. The interface renders correctly without it, the panel falls back to a deep brand-tinted surface with the KMC mark, so a missing file is never a broken screen.
 
 ## What the login screen expects
 
@@ -15,7 +15,7 @@ Drop the login panel photograph in this directory. The interface renders correct
 |---|---|
 | Aspect ratio | Portrait, roughly 3:4. The panel is full height and about 45% of viewport width on desktop |
 | Minimum size | 1200 × 1600 px. Supply 1600 × 2133 px for `@2x` |
-| Format | JPEG, progressive, quality 80. Keep the file under 400 KB — this screen loads before authentication and should not wait on a large asset |
+| Format | JPEG, progressive, quality 80. Keep the file under 400 KB. This screen loads before authentication and should not wait on a large asset |
 | Subject | Vehicle plant or manufacturing floor |
 | Composition | The right third is overlaid with a dark gradient carrying white text. Keep the subject weighted to the left and avoid detail that matters on the right edge |
 

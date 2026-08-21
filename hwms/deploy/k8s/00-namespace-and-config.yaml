@@ -30,12 +30,15 @@ data:
   KEYCLOAK_REALM: "hwms"
   IDENTITY_SERVICE_URL: "http://identity:8082"
   CLINICAL_SERVICE_URL: "http://clinical:8083"
+  ADMIN_SERVICE_URL: "http://admin:8084"
+  OCCUPATIONAL_SERVICE_URL: "http://occupational:8085"
+  METRICS_SERVICE_URL: "http://metrics:8086"
   SESSION_IDLE_TIMEOUT: "30m"
   COOKIE_SECURE: "true"
   LOG_LEVEL: "info"
 ---
 # The secret is NOT held in this repository. Create it from a KMC-controlled
-# source — sealed-secrets, Vault, or `kubectl create secret` run by ICT — using
+# source, sealed-secrets, Vault, or `kubectl create secret` run by ICT, using
 # the keys below. The development values in docker-compose.yml are development
 # values and must never reach a cluster.
 #
@@ -43,6 +46,7 @@ data:
 #     --from-literal=POSTGRES_PASSWORD=... \
 #     --from-literal=GATEWAY_CLIENT_SECRET=... \
 #     --from-literal=IDENTITY_CLIENT_SECRET=... \
+#     --from-literal=METRICS_INGEST_TOKEN=... \
 #     --from-literal=KEYCLOAK_ADMIN_PASSWORD=...
 #
 apiVersion: v1
@@ -60,12 +64,12 @@ stringData:
   CLINICAL_DB_PASSWORD: "replace-me"
   GATEWAY_CLIENT_SECRET: "replace-me"
   IDENTITY_CLIENT_SECRET: "replace-me"
+  METRICS_INGEST_TOKEN: "replace-me"
   KEYCLOAK_ADMIN_PASSWORD: "replace-me"
 ---
-# The clinical service, when it is built, is denied network access to
-# everything except its own database. That policy belongs here from the start
-# so it is not remembered late: it is the deployment-level enforcement of
-# ADR-03, and it should exist before there is a clinical record to protect.
+# Every workload starts with no permitted inbound caller. The service manifest
+# then names each allowed path, including the single clinical database client.
+# This keeps a newly added service private until its callers are reviewed.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

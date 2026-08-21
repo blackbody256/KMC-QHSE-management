@@ -20,7 +20,7 @@ type service struct {
 
 func (s *service) routes(r chi.Router) {
 	// Handler-layer check. Every method below checks again in the service
-	// layer — see the note in platform/auth about why that is not redundant.
+	// layer, see the note in platform/auth about why that is not redundant.
 	//
 	// The refusal names the rule rather than merely reporting denial. Someone
 	// who reaches it should understand that this is a designed boundary, not
@@ -42,10 +42,11 @@ func (s *service) routes(r chi.Router) {
 	r.Post("/visits/{id}/sign", s.handleSignVisit)
 
 	s.labRoutes(r)
+	s.referralRoutes(r)
 }
 
 // authorise is the service-layer half of the double check. It returns the
-// subject so that the caller's identity reaches the access log — a read that
+// subject so that the caller's identity reaches the access log, a read that
 // cannot name who performed it is not much of a record.
 func (s *service) authorise(w http.ResponseWriter, r *http.Request) (auth.Subject, bool) {
 	if err := auth.RequireRoleCtx(r.Context(), auth.RoleOfficer); err != nil {
@@ -158,7 +159,6 @@ func (s *service) handleCreatePatient(w http.ResponseWriter, r *http.Request) {
 	}
 	s.log.Info("patient registered",
 		slog.String("actor", subject.Username),
-		slog.String("patient_id", created.ID),
 		slog.String("category", created.Category),
 	)
 	httpx.JSON(w, http.StatusCreated, created)
@@ -235,7 +235,7 @@ func (s *service) handleSaveSection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// A signed record is closed. Correction is by appended amendment, which
-	// preserves the original — per FR-ENC-14. Silently accepting an edit to a
+	// preserves the original, per FR-ENC-14. Silently accepting an edit to a
 	// signed record would make the signature meaningless.
 	state, err := s.store.VisitState(r.Context(), visitID)
 	if err != nil {
@@ -283,7 +283,6 @@ func (s *service) handleSignVisit(w http.ResponseWriter, r *http.Request) {
 	}
 	s.log.Info("visit signed",
 		slog.String("actor", subject.Username),
-		slog.String("visit_id", visitID),
 	)
 	httpx.JSON(w, http.StatusOK, map[string]string{"state": "signed"})
 }

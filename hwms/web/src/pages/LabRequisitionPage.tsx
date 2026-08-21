@@ -117,7 +117,7 @@ export function LabRequisitionPage() {
             <button
               type="button"
               className="button-secondary"
-              onClick={() => downloadLabRequisitionPdf(requisition, catalogue)}
+              onClick={() => void downloadLabRequisitionPdf(requisition, catalogue)}
             >
               <Icon name="download" size={16} />
               Download form

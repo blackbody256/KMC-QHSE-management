@@ -12,7 +12,7 @@ import {
  * Roles as the Keycloak realm names them.
  *
  * The browser reads roles to decide what to render. It does not decide what is
- * permitted — every service checks the token again at the handler and once
+ * permitted. Every service checks the token again at the handler and once
  * more in the service layer. Hiding a control the caller may not use is a
  * courtesy; refusing the request is the control.
  */

@@ -1,4 +1,4 @@
--- Laboratory requisition — KMC.DQHSE.05/26-FM008.
+-- Laboratory requisition, KMC.DQHSE.05/26-FM008.
 --
 -- Modelled on the form the Occupational Health & Wellness Clinic actually
 -- uses. Two properties of that form drive this schema and both differ from

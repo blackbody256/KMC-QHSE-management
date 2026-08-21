@@ -161,6 +161,9 @@ spec:
             # that finds a second one has found a defect.
             - name: CLINICAL_DATABASE_URL
               value: postgres://hwms_clinical:$(CLINICAL_DB_PASSWORD)@postgres-clinical:5432/clinical?sslmode=require
+            - name: METRICS_INGEST_TOKEN
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: METRICS_INGEST_TOKEN }
           envFrom:
             - configMapRef: { name: hwms-config }
           ports:
@@ -170,6 +173,180 @@ spec:
             initialDelaySeconds: 10
           readinessProbe:
             httpGet: { path: /readyz, port: 8083 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+  namespace: hwms
+spec:
+  selector: { app: admin }
+  ports:
+    - port: 8084
+      targetPort: 8084
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+  namespace: hwms
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: admin }
+  template:
+    metadata:
+      labels: { app: admin }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: admin
+          image: ghcr.io/kiiramotors/hwms-admin:latest
+          env:
+            - name: ADMIN_ADDR
+              value: ":8084"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: POSTGRES_PASSWORD }
+            - name: ADMIN_DATABASE_URL
+              value: postgres://hwms:$(POSTGRES_PASSWORD)@postgres:5432/admin?sslmode=disable
+          envFrom:
+            - configMapRef: { name: hwms-config }
+          ports:
+            - containerPort: 8084
+          livenessProbe:
+            httpGet: { path: /livez, port: 8084 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8084 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: occupational
+  namespace: hwms
+spec:
+  selector: { app: occupational }
+  ports:
+    - port: 8085
+      targetPort: 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: occupational
+  namespace: hwms
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: occupational }
+  template:
+    metadata:
+      labels: { app: occupational }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: occupational
+          image: ghcr.io/kiiramotors/hwms-occupational:latest
+          env:
+            - name: OCCUPATIONAL_ADDR
+              value: ":8085"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: POSTGRES_PASSWORD }
+            - name: OCCUPATIONAL_DATABASE_URL
+              value: postgres://hwms:$(POSTGRES_PASSWORD)@postgres:5432/occupational?sslmode=disable
+          envFrom:
+            - configMapRef: { name: hwms-config }
+          ports:
+            - containerPort: 8085
+          livenessProbe:
+            httpGet: { path: /livez, port: 8085 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8085 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics
+  namespace: hwms
+spec:
+  type: ClusterIP
+  selector: { app: metrics }
+  ports:
+    - port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics
+  namespace: hwms
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: metrics }
+  template:
+    metadata:
+      labels: { app: metrics }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: metrics
+          image: ghcr.io/kiiramotors/hwms-metrics:latest
+          env:
+            - name: METRICS_ADDR
+              value: ":8086"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: POSTGRES_PASSWORD }
+            - name: METRICS_DATABASE_URL
+              value: postgres://hwms:$(POSTGRES_PASSWORD)@postgres:5432/metrics?sslmode=disable
+            # This is the only secret metrics shares with clinical. Metrics is
+            # never issued the clinical database password or connection URL.
+            - name: METRICS_INGEST_TOKEN
+              valueFrom:
+                secretKeyRef: { name: hwms-secrets, key: METRICS_INGEST_TOKEN }
+          envFrom:
+            - configMapRef: { name: hwms-config }
+          ports:
+            - containerPort: 8086
+          livenessProbe:
+            httpGet: { path: /livez, port: 8086 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8086 }
             initialDelaySeconds: 10
             periodSeconds: 10
           resources:
@@ -200,6 +377,171 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
+---
+# The shared database accepts only the workloads that own a database on it.
+# Clinical is deliberately absent because it uses its isolated instance.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: shared-database-clients
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: postgres }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [keycloak, identity, admin, occupational, metrics]
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+# Browser traffic terminates at web or Keycloak. The other services remain
+# reachable only from the named in-cluster callers below.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: public-edge-services
+  namespace: hwms
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [web, keycloak]
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8180
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-from-web
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: gateway }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: web }
+      ports:
+        - protocol: TCP
+          port: 8081
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: identity-from-gateway
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: identity }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: gateway }
+      ports:
+        - protocol: TCP
+          port: 8082
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: clinical-from-gateway
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: clinical }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: gateway }
+      ports:
+        - protocol: TCP
+          port: 8083
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-service-clients
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: admin }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [gateway, occupational, metrics]
+      ports:
+        - protocol: TCP
+          port: 8084
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: occupational-service-clients
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: occupational }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [gateway, metrics]
+      ports:
+        - protocol: TCP
+          port: 8085
+---
+# Clinical can deliver the four-field leave contribution, and the gateway can
+# reach the authenticated metrics API. No ingress path targets this service,
+# so /internal is not reachable from outside the cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: metrics-service-clients
+  namespace: hwms
+spec:
+  podSelector:
+    matchLabels: { app: metrics }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [gateway, clinical]
+      ports:
+        - protocol: TCP
+          port: 8086
 ---
 apiVersion: v1
 kind: Service

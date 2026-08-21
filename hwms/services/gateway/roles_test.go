@@ -11,7 +11,7 @@ import (
 //
 // The gateway originally read roles from the identity token. Keycloak places
 // realm roles on the *access* token and, by default, leaves them off the
-// identity token entirely — so a correctly provisioned manager signed in with
+// identity token entirely, so a correctly provisioned manager signed in with
 // an empty role list, an empty navigation, and no explanation.
 //
 // The access-control suite in services/clinical did not catch it: those tests

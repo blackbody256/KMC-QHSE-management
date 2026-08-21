@@ -3,7 +3,7 @@
 # Seed the first manager account.
 #
 # The manager is the only account created outside the application. Everything
-# else — Health and Wellness Officers and Directors — is created by the manager
+# else, Health and Wellness Officers and Directors, is created by the manager
 # through the Accounts screen, so that account creation is an audited action
 # inside the system rather than a shell command nobody has a record of.
 #
@@ -109,7 +109,7 @@ Manager account created.
 
   Sign-in name  ${EMAIL}
   Role          hwms-manager
-  Password      temporary — it must be changed at first sign-in
+  Password      temporary. It must be changed at first sign-in
 
 Sign in at the application address, then use Accounts to create the Health and
 Wellness Officer and Director accounts. Those creations are recorded in the

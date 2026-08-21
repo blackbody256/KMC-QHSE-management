@@ -7,7 +7,7 @@ import "time"
 //
 // This is the whole catalogue. The clinic offers seven investigations in four
 // groups; an earlier draft of this system carried a generic occupational
-// health panel — liver function, lipids, audiometry and the rest — and none of
+// health panel, liver function, lipids, audiometry and the rest, and none of
 // it appears on the form. Digitise the form, do not improve it.
 //
 // The catalogue is published by the API so the interface does not keep its own

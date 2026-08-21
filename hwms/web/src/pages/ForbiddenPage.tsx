@@ -8,7 +8,7 @@ import { primaryRole, roleLabels, useSession } from "../lib/session";
  *
  * It explains rather than scolds, and it names who can change the situation.
  * Reaching this page is usually a bookmark or a shared link, not an attempt at
- * anything — the navigation never offers a route the role cannot open.
+ * anything, the navigation never offers a route the role cannot open.
  */
 export function ForbiddenPage() {
   const { user } = useSession();

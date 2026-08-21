@@ -100,7 +100,7 @@ export function VisitDetailPage() {
   async function sign() {
     if (!visit) return;
     const confirmed = window.confirm(
-      "Signing locks this visit. After signing it cannot be edited — a correction has to be added as an amendment that keeps the original intact.\n\nSign this visit?",
+      "Signing locks this visit. After signing it cannot be edited. A correction has to be added as an amendment that keeps the original intact.\n\nSign this visit?",
     );
     if (!confirmed) return;
 
@@ -166,6 +166,14 @@ export function VisitDetailPage() {
             >
               <Icon name="science" size={16} />
               Request laboratory
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => navigate(`/referrals/new?visitId=${encodeURIComponent(visitId)}`)}
+            >
+              <Icon name="forward_to_inbox" size={16} />
+              Refer out
             </button>
             {!locked ? (
               <button type="button" className="button-primary" onClick={() => void sign()} disabled={signing}>
