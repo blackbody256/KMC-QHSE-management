@@ -107,7 +107,7 @@ function NoRoleAssigned() {
           Someone who lands here has signed in successfully and should be able
           to see they are in the right system. */}
       <img
-        src="/kmc-logo-rgb.png"
+        src="/logo.png"
         alt="Kiira Motors Corporation"
         className="mb-8 h-8 w-auto"
       />

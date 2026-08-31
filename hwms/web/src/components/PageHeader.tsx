@@ -2,18 +2,20 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   actions?: React.ReactNode;
+  eyebrow?: string;
 }
 
-export function PageHeader({ title, description, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, actions, eyebrow }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex items-start justify-between gap-6">
-      <div>
-        <h1 className="text-xl">{title}</h1>
+    <header className="page-header">
+      <div className="page-header-copy">
+        {eyebrow ? <span className="page-eyebrow">{eyebrow}</span> : null}
+        <h1 className="page-title">{title}</h1>
         {description ? (
-          <p className="mt-1 max-w-form text-sm text-ink-muted">{description}</p>
+          <p className="page-description">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-3">{actions}</div> : null}
-    </div>
+      {actions ? <div className="page-actions">{actions}</div> : null}
+    </header>
   );
 }

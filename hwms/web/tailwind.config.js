@@ -13,6 +13,13 @@ export default {
           wash: "var(--kmc-red-wash)",
           tint: "var(--kmc-red-tint)",
         },
+        clinical: {
+          DEFAULT: "var(--clinical)",
+          deep: "var(--clinical-deep)",
+          soft: "var(--clinical-soft)",
+          faint: "var(--clinical-faint)",
+          muted: "var(--clinical-muted)",
+        },
         dark: {
           DEFAULT: "var(--dark)",
           raised: "var(--dark-raised)",

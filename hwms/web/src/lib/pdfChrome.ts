@@ -14,7 +14,7 @@ import type { jsPDF } from "jspdf";
  * download is already a logged read of the record it prints.
  */
 
-const LOGO_PATH = "/kmc-logo-rgb.png";
+const LOGO_PATH = "/logo.png";
 /** 1356 × 271 as supplied. Held here so the mark is never drawn distorted. */
 const LOGO_ASPECT = 1356 / 271;
 

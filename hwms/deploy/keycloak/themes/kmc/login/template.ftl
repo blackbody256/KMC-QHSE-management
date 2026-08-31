@@ -38,7 +38,7 @@
   <section class="kmc-brand">
     <div>
       <img class="kmc-brand__mark"
-           src="${url.resourcesPath}/img/kmc-logo-rgb.png"
+           src="${url.resourcesPath}/img/logo.png"
            alt="Kiira Motors Corporation">
       <span class="kmc-brand__eyebrow">Health and Wellness &middot; Occupational health</span>
     </div>

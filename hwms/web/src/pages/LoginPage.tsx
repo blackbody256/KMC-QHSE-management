@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AuthDialog } from "../components/AuthDialog";
 import { Icon } from "../components/Icon";
 
 /**
@@ -31,23 +33,31 @@ export function LoginPage() {
   const [params] = useSearchParams();
   const errorKey = params.get("error");
   const message = errorKey ? (errorMessages[errorKey] ?? errorMessages.exchange) : null;
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [startingSignIn, setStartingSignIn] = useState(false);
+
+  const continueToSignIn = () => {
+    setStartingSignIn(true);
+    window.location.assign("/auth/login");
+  };
 
   return (
+    <>
     <main className="grid min-h-screen lg:grid-cols-[minmax(360px,0.9fr)_minmax(480px,1.1fr)]"
           style={{ background: "var(--dark)" }}>
       {/* Branded panel. The KMC mark sits here, top left, at full colour on a
           dark ground, the arrangement the client signed off. */}
       <section
-        className="relative flex min-h-screen flex-col justify-between px-8 py-12 lg:px-[clamp(32px,5vw,76px)]"
+        className="relative flex flex-col justify-between px-6 py-8 lg:min-h-screen lg:px-[clamp(32px,5vw,76px)] lg:py-12"
         style={{
           color: "var(--ink-inverse)",
           background:
-            "radial-gradient(circle at 16% 18%, rgb(229 31 43 / 18%), transparent 28%), linear-gradient(145deg, var(--dark) 0%, var(--dark-raised) 100%)",
+            "radial-gradient(circle at 16% 18%, var(--brand-glow), transparent 28%), linear-gradient(145deg, var(--dark) 0%, var(--dark-raised) 100%)",
         }}
       >
         <div className="flex flex-col items-start gap-2">
           <img
-            src="/kmc-logo-rgb.png"
+            src="/logo.png"
             alt="Kiira Motors Corporation"
             className="w-[230px] max-w-full"
           />
@@ -59,7 +69,7 @@ export function LoginPage() {
           </span>
         </div>
 
-        <div className="max-w-[580px] py-16">
+        <div className="max-w-[580px] py-10 lg:py-16">
           <span
             className="mb-4 block text-xs font-semibold uppercase tracking-[0.11em]"
             style={{ color: "var(--kmc-red-tint)" }}
@@ -79,8 +89,8 @@ export function LoginPage() {
         </div>
 
         <div
-          className="flex max-w-[540px] gap-3 rounded p-4"
-          style={{ background: "rgb(255 255 255 / 5%)", border: "1px solid var(--dark-rule)" }}
+          className="hidden max-w-[540px] gap-3 rounded p-4 lg:flex"
+          style={{ background: "var(--white-05)", border: "1px solid var(--dark-rule)" }}
         >
           <Icon name="lock" size={22} className="shrink-0" style={{ color: "var(--kmc-red-tint)" }} />
           <div className="flex flex-col gap-1">
@@ -100,7 +110,8 @@ export function LoginPage() {
           style={{
             background: "var(--surface)",
             border: "1px solid var(--rule)",
-            boxShadow: "0 24px 70px rgb(0 0 0 / 20%)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-float)",
           }}
         >
           <div className="mb-6 flex items-center gap-3">
@@ -138,10 +149,14 @@ export function LoginPage() {
             </div>
           ) : null}
 
-          <a href="/auth/login" className="button-primary mt-8 w-full">
+          <button
+            type="button"
+            className="button-primary mt-8 w-full"
+            onClick={() => setSignInOpen(true)}
+          >
             <Icon name="login" size={18} />
             Sign in
-          </a>
+          </button>
 
           <div className="mt-8 border-t border-rule pt-6 text-xs leading-relaxed text-ink-muted">
             <p>
@@ -152,5 +167,19 @@ export function LoginPage() {
         </div>
       </section>
     </main>
+
+    <AuthDialog
+      open={signInOpen}
+      tone="signin"
+      icon="lock"
+      title="Continue to secure sign in"
+      description="KMC’s sign-in service will verify your account and return you to this workspace. The Health and Wellness system never receives your password."
+      confirmLabel="Continue to sign in"
+      cancelLabel="Not now"
+      busy={startingSignIn}
+      onClose={() => setSignInOpen(false)}
+      onConfirm={continueToSignIn}
+    />
+    </>
   );
 }
