@@ -1,20 +1,21 @@
+import { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { AuthDialog } from "./AuthDialog";
 import { Icon } from "./Icon";
 import { navigationFor, routeFor, isReadOnly } from "../lib/navigation";
 import { primaryRole, roleLabels, useSession } from "../lib/session";
 
+function initialsFor(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "HW";
+  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
+}
+
 /**
- * The application shell.
- *
- * The masthead is two bands. The white brand band carries the KMC lockup in its
- * actual colours; the red action bar beneath it carries the system title, the
- * signed-in role and sign out. Splitting them is what lets the mark appear at
- * full colour. Reversed out of the red it was a silhouette, which is the one
- * form of a logo that carries no brand.
- *
- * The current role is displayed permanently rather than buried in a menu. In a
- * system whose central design decision is role separation, a user must always
- * be able to see which role they are acting in.
+ * The application shell keeps the current role and current working area in
+ * view, while allowing the clinical content to remain the visual priority.
+ * On smaller screens the rail becomes a proper modal drawer rather than
+ * squeezing record forms into an unusable column.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useSession();
@@ -23,88 +24,125 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const current = routeFor(location.pathname);
   const readOnly = current ? isReadOnly(current, role) : false;
+  const [navOpen, setNavOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const currentArea = useMemo(() => {
+    for (const group of groups) {
+      if (group.items.some((item) => item.path === current?.path)) {
+        return group.label ?? "Overview";
+      }
+      if (group.items.some((item) => item.children?.some((child) => child.path === current?.path))) {
+        return group.label ?? "Overview";
+      }
+    }
+    return "Health and Wellness";
+  }, [current?.path, groups]);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
+
+  const confirmSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      <header className="fixed inset-x-0 top-0 z-20">
-        {/* Brand band. The lockup on white, as the mark was drawn. */}
-        <div
-          className="flex items-center justify-between border-b px-6"
-          style={{
-            height: "var(--brand-band-height)",
-            background: "var(--surface)",
-            borderColor: "var(--rule)",
-          }}
-        >
-          <img
-            src="/kmc-logo-rgb.png"
-            alt="Kiira Motors Corporation"
-            className="w-auto"
-            style={{ height: "calc(var(--brand-band-height) - 16px)" }}
-          />
-          <span className="text-xs uppercase tracking-[0.08em] text-ink-faint">
-            Department of Quality, Health, Safety and Environment
-          </span>
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="topbar-brand">
+          <div className="topbar-logo-wrap">
+            <img src="/logo.png" alt="Kiira Motors Corporation" className="topbar-logo" />
+          </div>
+          <div className="topbar-brand-copy">
+            <strong>Health &amp; Wellness</strong>
+            <span>QHSE workspace</span>
+          </div>
         </div>
 
-        {/* Action bar. The first of the three places KMC red is permitted. */}
-        <div
-          className="flex items-center justify-between px-6 text-ink-inverse"
-          style={{ height: "var(--action-bar-height)", background: "var(--kmc-red)" }}
-        >
-          <span className="text-sm font-semibold tracking-tight">QHSE Management System</span>
+        <div className="topbar-main">
+          <button
+            type="button"
+            className="icon-button menu-button"
+            onClick={() => setNavOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={navOpen}
+          >
+            <Icon name="menu" size={21} />
+          </button>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right leading-tight">
-              <div className="text-sm font-semibold">{user?.name}</div>
-              <div className="text-xs opacity-90">
-                {role ? roleLabels[role] : "No role assigned"}
+          <div className="topbar-context">
+            <span>{currentArea}</span>
+            <strong>{current?.label ?? "QHSE management system"}</strong>
+          </div>
+
+          <div className="topbar-actions">
+            <div className="user-chip">
+              <div className="user-copy">
+                <strong>{user?.name}</strong>
+                <span>{role ? roleLabels[role] : "No role assigned"}</span>
               </div>
+              <span className="user-avatar" aria-hidden="true">
+                {initialsFor(user?.name ?? "Health Wellness")}
+              </span>
             </div>
             <button
               type="button"
-              onClick={() => void signOut()}
-              className="flex items-center gap-2 rounded border border-white/40 px-3 py-1.5 text-sm font-medium hover:bg-white/10"
+              className="button-secondary topbar-signout"
+              onClick={() => setSignOutOpen(true)}
             >
-              <Icon name="logout" size={16} />
-              Sign out
+              <Icon name="logout" size={17} />
+              <span>Sign out</span>
             </button>
           </div>
         </div>
       </header>
 
+      {navOpen ? (
+        <button
+          type="button"
+          className="mobile-scrim"
+          aria-label="Close navigation"
+          onClick={() => setNavOpen(false)}
+        />
+      ) : null}
+
       <nav
         aria-label="Primary"
-        className="fixed bottom-0 left-0 flex flex-col overflow-y-auto border-r border-rule bg-surface px-3 py-4"
-        style={{ top: "var(--masthead-height)", width: "var(--rail-width)" }}
+        className={`sidebar${navOpen ? " sidebar-open" : ""}`}
       >
-        <div className="flex-1">
+        <div className="sidebar-mobile-head">
+          <strong>Health &amp; Wellness</strong>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => setNavOpen(false)}
+            aria-label="Close navigation"
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+
+        <div className="sidebar-groups">
           {groups.map((group) => (
-            <div key={group.label ?? "overview"} className="mb-6">
-              {group.label ? (
-                <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-                  {group.label}
-                </div>
-              ) : null}
-              <ul className="space-y-0.5">
+            <div key={group.label ?? "overview"} className="nav-group">
+              {group.label ? <div className="nav-group-label">{group.label}</div> : null}
+              <ul className="nav-list">
                 {group.items.map((item) => (
                   <li key={item.path}>
                     <NavLink
                       to={item.path}
                       className={({ isActive }) =>
-                        [
-                          "flex items-center gap-3 rounded px-3 py-2 text-sm",
-                          isActive
-                            ? "font-semibold text-ink-inverse"
-                            : "text-ink-muted hover:bg-surface-sunken hover:text-ink",
-                        ].join(" ")
-                      }
-                      style={({ isActive }) =>
-                        // The third and last place KMC red is permitted.
-                        isActive ? { background: "var(--kmc-red)" } : undefined
+                        `nav-link${isActive ? " nav-link-active" : ""}`
                       }
                     >
-                      <Icon name={item.icon} size={20} />
+                      <Icon name={item.icon} size={19} />
                       <span>{item.label}</span>
                     </NavLink>
                   </li>
@@ -114,41 +152,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </div>
 
-        {/* Footer sign-off. Muted, so it reads as the foot of the page rather
-            than competing with the brand band at the top. */}
-        <div className="mt-6 border-t border-rule px-3 pt-4">
-          <img
-            src="/kmc-logo-rgb.png"
-            alt=""
-            aria-hidden="true"
-            className="h-5 w-auto opacity-45 grayscale"
-          />
-          <p className="mt-2 text-xs leading-relaxed text-ink-faint">
-            Health and Wellness division
-            <br />
-            Occupational health
-          </p>
+        <div className="sidebar-foot">
+          <Icon name="lock" size={18} style={{ color: "var(--clinical)" }} />
+          <div>
+            <strong>Protected workspace</strong>
+            <span>Access follows your role. Clinical record retrievals are logged.</span>
+          </div>
         </div>
       </nav>
 
-      <main
-        style={{ marginTop: "var(--masthead-height)", marginLeft: "var(--rail-width)" }}
-        className="min-h-[calc(100vh-var(--masthead-height))] px-8 py-6"
-      >
-        {readOnly ? (
-          <div
-            className="mx-auto mb-6 flex max-w-content items-center gap-3 rounded border px-4 py-3 text-sm"
-            style={{ borderColor: "var(--rule)", background: "var(--neutral-wash)", color: "var(--ink-muted)" }}
-          >
-            <Icon name="visibility" size={18} />
-            <span>
-              You are viewing this page. The {role ? roleLabels[role] : "current"} role does not enter or
-              approve records here.
-            </span>
-          </div>
-        ) : null}
-        <div className="mx-auto max-w-content">{children}</div>
+      <main className="app-main">
+        <div className="content-frame">
+          {readOnly ? (
+            <div className="read-only-note">
+              <Icon name="visibility" size={18} />
+              <span>
+                View-only access. The {role ? roleLabels[role] : "current"} role does not enter or
+                approve records here.
+              </span>
+            </div>
+          ) : null}
+          {children}
+        </div>
       </main>
+
+      <AuthDialog
+        open={signOutOpen}
+        tone="signout"
+        icon="logout"
+        title="Sign out of this workspace?"
+        description="Your secure session will end on this device. Any work that has not been saved on the current page will be lost."
+        confirmLabel="Sign out"
+        cancelLabel="Stay signed in"
+        busy={signingOut}
+        onClose={() => setSignOutOpen(false)}
+        onConfirm={() => void confirmSignOut()}
+      />
     </div>
   );
 }

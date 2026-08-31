@@ -13,36 +13,6 @@ import {
 import { primaryRole, useSession } from "../lib/session";
 import { currentPeriod } from "../lib/dates";
 
-/**
- * The executive dashboard.
- *
- * Every figure here is derived from a record somebody entered, and every one
- * says where it came from and how it was worked out. That is the whole argument
- * of this system: the department already had figures, and what it did not have
- * was a way to answer "where did that come from" without a week of email.
- *
- * The page leads with what is wrong rather than with all nine indicators laid
- * out evenly. A grid of nine equally-weighted cards asks the reader to find the
- * problem; a dashboard should hand it to them. The exceptions come first,
- * named, and the full set follows for anyone who wants it.
- *
- * The mark on each card is chosen by what the figure *is*, not for variety:
- *
- *   a proportion of a whole   → a ring, with the target on the track
- *   a value against a floor
- *   or ceiling with no cap    → a straight track that can run past its target
- *   a count against zero      → the figure itself; a meter of "0 out of 0"
- *                               would be a shape pretending to be information
- *
- * Every one carries a sparkline of the months so far, because a single figure
- * is not a finding. 92% means little until you can see it was 97% in March.
- *
- * Four rules are visible on this screen and none of them are cosmetic. A
- * missing figure reads "No data" and is never styled as a failure. An
- * incomplete year-to-date is not averaged. The direction of each indicator is
- * printed beside its target, because it is not guessable from the name. And a
- * target its owner has not agreed is labelled proposed.
- */
 const statusFor: Record<MetricStatus, Status> = {
   within: "within",
   approaching: "approaching",
@@ -64,19 +34,18 @@ const statusGlyph: Record<MetricStatus, string> = {
   "no-data": "—",
 };
 
-/**
- * Which mark suits an indicator, decided from its own definition rather than
- * from a list of identifiers. A new indicator gets the right mark by virtue of
- * how its target is expressed.
- */
 function markFor(metric: DashboardMetric): "ring" | "track" | "figure" {
   if (metric.format === "percent-1") return "ring";
-  // An exact target, such as nought fatalities, is not a proportion and not
-  // a distance along a track. The number is the chart.
   if (metric.targetValue === 0) return "figure";
   return "track";
 }
 
+/**
+ * The dashboard opens with a scan, then an explanation. Four small summary
+ * cards answer the questions a manager asks first; the status mix and the
+ * exception list follow; individual indicators remain available below with
+ * provenance on demand. Missing data never masquerades as poor performance.
+ */
 export function DashboardPage() {
   const { user } = useSession();
   const isDirector = primaryRole(user) === "hwms-director";
@@ -116,43 +85,44 @@ export function DashboardPage() {
     ? [
         {
           label: "Occupational health",
-          metrics: snapshot.metrics.filter((m) => m.group === "Occupational health"),
+          metrics: snapshot.metrics.filter((metric) => metric.group === "Occupational health"),
         },
         {
           label: "Health and safety summary",
-          metrics: snapshot.metrics.filter((m) => m.group !== "Occupational health"),
+          metrics: snapshot.metrics.filter((metric) => metric.group !== "Occupational health"),
         },
       ].filter((group) => group.metrics.length > 0)
     : [];
 
   const counted = (status: MetricStatus) =>
-    snapshot?.metrics.filter((m) => m.month.status === status).length ?? 0;
+    snapshot?.metrics.filter((metric) => metric.month.status === status).length ?? 0;
 
-  // Off target first, then approaching. No data is counted but not listed as an
-  // exception: a month nobody has entered is a task, not a performance problem,
-  // and mixing the two makes the list mean less than it should.
   const exceptions = snapshot
     ? [
-        ...snapshot.metrics.filter((m) => m.month.status === "outside"),
-        ...snapshot.metrics.filter((m) => m.month.status === "approaching"),
+        ...snapshot.metrics.filter((metric) => metric.month.status === "outside"),
+        ...snapshot.metrics.filter((metric) => metric.month.status === "approaching"),
       ]
     : [];
+
+  const attentionCount = counted("outside") + counted("approaching");
+  const reportedCount = snapshot ? snapshot.totalMetrics - snapshot.noData : 0;
 
   return (
     <>
       <PageHeader
-        title="Divisional performance"
+        eyebrow="Reporting dashboard"
+        title="Health and wellness overview"
         description={
           isDirector
-            ? "Headline indicators for the reporting month. Unit-level detail is held by the manager and the officer."
-            : "Every figure states where it came from and how it was worked out. Nothing here is entered directly."
+            ? "A concise view of the reporting month. Unit-level clinical detail remains with the manager and officer."
+            : "See the month at a glance, then open an indicator only when you need its calculation or source."
         }
         actions={
-          <label className="flex items-center gap-2 text-xs text-ink-muted">
-            Month
+          <label className="flex items-center gap-2 text-xs font-semibold text-ink-muted">
+            Reporting month
             <input
               type="month"
-              className="field w-auto py-1.5 text-sm"
+              className="field w-auto text-sm"
               value={period}
               onChange={(event) => setPeriod(event.target.value)}
             />
@@ -161,10 +131,15 @@ export function DashboardPage() {
       />
 
       {loading ? (
-        <div className="py-12 text-sm text-ink-muted">Assembling the dashboard…</div>
+        <div className="panel">
+          <div className="panel-body flex items-center gap-3 text-sm text-ink-muted">
+            <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-clinical" />
+            Assembling the reporting picture…
+          </div>
+        </div>
       ) : error ? (
         <div
-          className="flex items-start gap-3 rounded border px-4 py-3 text-sm"
+          className="flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           style={{ borderColor: "var(--breach)", background: "var(--breach-wash)", color: "var(--breach)" }}
           role="alert"
         >
@@ -172,26 +147,59 @@ export function DashboardPage() {
           <span>{error}</span>
         </div>
       ) : snapshot ? (
-        <>
-          {/* --- the shape of the month, then what is wrong with it --------- */}
-          <section className="panel mb-6">
-            <div className="panel-body grid gap-8 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="data-value text-kpi font-medium">{snapshot.onTarget}</span>
-                  <span className="text-sm text-ink-muted">
-                    of <span className="data-value">{snapshot.totalMetrics}</span> on target
-                  </span>
-                </div>
-                <p className="mb-4 mt-1 text-xs text-ink-muted">
-                  {snapshot.periodLabel} · year to date covers{" "}
-                  <span className="data-value">{snapshot.monthsInYearToDate}</span> month
-                  {snapshot.monthsInYearToDate === 1 ? "" : "s"} from January
-                </p>
+        <div className="dashboard-content">
+          <section className="dashboard-stat-grid" aria-label={`${snapshot.periodLabel} summary`}>
+            <article className="dashboard-stat">
+              <span className="dashboard-stat-label">Indicators on target</span>
+              <strong className="dashboard-stat-value">
+                {snapshot.onTarget}/{snapshot.totalMetrics}
+              </strong>
+              <span className="dashboard-stat-note">Meeting the agreed threshold</span>
+            </article>
 
+            <article className="dashboard-stat" data-tone="attention">
+              <span className="dashboard-stat-label">Need attention</span>
+              <strong className="dashboard-stat-value">{attentionCount}</strong>
+              <span className="dashboard-stat-note">
+                {counted("outside")} off target · {counted("approaching")} approaching
+              </span>
+            </article>
+
+            <article className="dashboard-stat" data-tone="missing">
+              <span className="dashboard-stat-label">Reporting coverage</span>
+              <strong className="dashboard-stat-value">
+                {reportedCount}/{snapshot.totalMetrics}
+              </strong>
+              <span className="dashboard-stat-note">
+                {snapshot.noData === 0 ? "All figures received" : `${snapshot.noData} still awaiting data`}
+              </span>
+            </article>
+
+            <article className="dashboard-stat" data-tone="period">
+              <span className="dashboard-stat-label">Year-to-date window</span>
+              <strong className="dashboard-stat-value">{snapshot.monthsInYearToDate} mo.</strong>
+              <span className="dashboard-stat-note">January through {snapshot.periodLabel}</span>
+            </article>
+          </section>
+
+          <section className="dashboard-overview" aria-labelledby="monthly-picture-heading">
+            <div className="overview-grid">
+              <div className="overview-summary">
+                <span className="section-kicker">Monthly picture</span>
+                <h2 id="monthly-picture-heading" className="overview-heading">
+                  Performance distribution
+                </h2>
+                <div className="overview-score">
+                  <strong>{snapshot.onTarget}</strong>
+                  <span>of {snapshot.totalMetrics} indicators on target</span>
+                </div>
+                <p className="overview-note">
+                  {snapshot.periodLabel} · year to date includes {snapshot.monthsInYearToDate} month
+                  {snapshot.monthsInYearToDate === 1 ? "" : "s"}
+                </p>
                 <StatusBar
                   total={snapshot.totalMetrics}
-                  counts={(["within", "approaching", "outside", "no-data"] as MetricStatus[]).map(
+                  counts={( ["within", "approaching", "outside", "no-data"] as MetricStatus[]).map(
                     (status) => ({
                       status,
                       glyph: statusGlyph[status],
@@ -202,40 +210,39 @@ export function DashboardPage() {
                 />
               </div>
 
-              <div className="lg:border-l lg:border-rule lg:pl-8">
-                <h2 className="mb-3 text-sm font-semibold">Needs attention</h2>
+              <div className="overview-attention">
+                <div className="attention-head">
+                  <div>
+                    <span className="section-kicker">Review queue</span>
+                    <h2 className="overview-heading">Needs attention</h2>
+                  </div>
+                  <span className="attention-count" aria-label={`${exceptions.length} indicators need attention`}>
+                    {exceptions.length}
+                  </span>
+                </div>
 
                 {exceptions.length === 0 ? (
-                  <p className="text-sm text-ink-muted">
+                  <p className="text-sm leading-relaxed text-ink-muted">
                     No indicator is off target or approaching its limit in {snapshot.periodLabel}.
-                    {counted("no-data") > 0 ? (
-                      <>
-                        {" "}
-                        <span className="data-value">{counted("no-data")}</span> still has no figure
-                        for the month, that is entry outstanding, not a result.
-                      </>
-                    ) : null}
+                    {counted("no-data") > 0
+                      ? ` ${counted("no-data")} still has no monthly figure; that is reporting work outstanding, not a performance result.`
+                      : " All expected figures have been received."}
                   </p>
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="attention-list">
                     {exceptions.map((metric) => (
-                      <li
-                        key={metric.id}
-                        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-rule pb-2 last:border-0 last:pb-0"
-                      >
-                        <span className="flex items-baseline gap-2">
+                      <li key={metric.id} className="attention-item">
+                        <div className="attention-name">
                           <StatusIndicator
                             status={statusFor[metric.month.status]}
                             label={statusLabel[metric.month.status]}
                           />
-                          <span className="text-sm font-medium">{metric.name}</span>
-                        </span>
-                        <span className="text-sm">
-                          <span className="data-value font-medium">
-                            {metric.month.displayValue}
-                          </span>
-                          <span className="text-ink-muted"> against {metric.target}</span>
-                        </span>
+                          <strong title={metric.name}>{metric.name}</strong>
+                        </div>
+                        <div className="attention-value">
+                          <strong>{metric.month.displayValue}</strong>
+                          target {metric.target}
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -245,16 +252,19 @@ export function DashboardPage() {
           </section>
 
           {groups.map((group) => (
-            <section key={group.label} className="mb-8">
-              <h2 className="mb-3 text-lg">{group.label}</h2>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <section key={group.label} className="metric-section">
+              <div className="metric-section-head">
+                <h2>{group.label}</h2>
+                <span>{group.metrics.length} indicators</span>
+              </div>
+              <div className="metric-grid">
                 {group.metrics.map((metric) => (
                   <MetricCard key={metric.id} metric={metric} />
                 ))}
               </div>
             </section>
           ))}
-        </>
+        </div>
       ) : null}
     </>
   );
@@ -262,51 +272,54 @@ export function DashboardPage() {
 
 function MetricCard({ metric }: { metric: DashboardMetric }) {
   const [open, setOpen] = useState(false);
-
   const mark = markFor(metric);
-  const directionPhrase = metric.direction === "higher" ? "higher is better" : "lower is better";
+  const directionPhrase = metric.direction === "higher" ? "Higher is better" : "Lower is better";
   const value = metric.month.numericValue ?? null;
 
   return (
-    <article className="panel flex flex-col">
-      <div className="flex-1 p-4">
-        <div className="flex items-baseline gap-2 text-sm text-ink-muted">
-          <span className="data-value font-medium">{metric.id}</span>
-          <span>{metric.name}</span>
+    <article className="panel metric-card" data-status={metric.month.status}>
+      <div className="metric-card-head">
+        <div className="metric-title-wrap">
+          <span className="metric-code">{metric.id}</span>
+          <h3 className="metric-title">{metric.name}</h3>
         </div>
+        <StatusIndicator
+          status={statusFor[metric.month.status]}
+          label={statusLabel[metric.month.status]}
+        />
+      </div>
 
+      <div className="metric-card-body">
         {mark === "ring" ? (
-          <div className="mt-3 flex items-center gap-4">
+          <div className="metric-visual">
             <RadialMeter
               value={value}
               target={metric.targetValue}
               status={metric.month.status}
               label={`${metric.name}: ${metric.month.displayValue || "no data"} against a target of ${metric.target}`}
             />
-            <div className="min-w-0">
-              <div className="text-xs text-ink-muted">
-                target {metric.target}
-                <br />
-                {directionPhrase}
-              </div>
+            <div className="metric-target">
+              <strong className="block text-ink">Target {metric.target}</strong>
+              {directionPhrase}
+              {metric.proposed ? (
+                <span className="mt-2 block font-semibold text-caution">Target proposed</span>
+              ) : null}
             </div>
           </div>
         ) : (
-          <div className="mt-3">
-            <div className="flex items-baseline gap-2">
-              <span
-                className="data-value text-kpi font-medium"
-                style={{ color: value === null ? "var(--ink-faint)" : "var(--ink)" }}
-              >
-                {metric.month.displayValue === "" ? "—" : metric.month.displayValue}
-              </span>
+          <div className="metric-visual block pt-3">
+            <div
+              className="metric-figure"
+              style={{ color: value === null ? "var(--ink-faint)" : "var(--ink)" }}
+            >
+              {metric.month.displayValue === "" ? "—" : metric.month.displayValue}
             </div>
-            <div className="mt-1 text-xs text-ink-muted">
-              target {metric.target} · {directionPhrase}
+            <div className="metric-target mt-2">
+              Target {metric.target} · {directionPhrase}
+              {metric.proposed ? <span className="ml-2 font-semibold text-caution">Proposed</span> : null}
             </div>
-
             {mark === "track" ? (
-              <div className="mt-3">
+              <div className="mt-4">
                 <LinearMeter
                   value={value}
                   target={metric.targetValue}
@@ -319,92 +332,65 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           </div>
         )}
 
-        <div className="mt-4 border-t border-rule pt-3">
-          <Sparkline
-            points={metric.trend.map((point) => ({
-              period: point.period,
-              value: point.value,
-              status: point.status,
-            }))}
-            label={`${metric.name} by month, January to ${metric.trend[metric.trend.length - 1]?.period ?? "the reporting month"}`}
-          />
+        {metric.month.note ? <p className="mb-3 mt-0 text-xs text-ink-muted">{metric.month.note}</p> : null}
+
+        <div className="metric-compact-row">
+          <div>
+            <div className="metric-mini-label">Trend this year</div>
+            <Sparkline
+              points={metric.trend.map((point) => ({
+                period: point.period,
+                value: point.value,
+                status: point.status,
+              }))}
+              label={`${metric.name} by month, January to ${metric.trend[metric.trend.length - 1]?.period ?? "the reporting month"}`}
+            />
+          </div>
+          <div>
+            <div className="metric-mini-label">{metric.aggregationLabel}</div>
+            {metric.yearToDate.displayValue !== "" ? (
+              <div className="metric-ytd">{metric.yearToDate.displayValue}</div>
+            ) : (
+              <div className="metric-ytd-note">{metric.yearToDate.note ?? "No data"}</div>
+            )}
+          </div>
         </div>
 
-        {/* The year-to-date cell. Either a figure, or an explicit statement of
-            how much history is missing, never a part-year average. */}
-        <div className="mt-3 border-t border-rule pt-3">
-          <div className="text-xs text-ink-muted">{metric.aggregationLabel}</div>
-          {metric.yearToDate.displayValue !== "" ? (
-            <div className="data-value text-lg font-medium">{metric.yearToDate.displayValue}</div>
-          ) : (
-            <div className="mt-0.5 text-xs text-ink-faint">
-              {metric.yearToDate.note ?? "No data"}
-            </div>
-          )}
-        </div>
-
-        {metric.month.note ? (
-          <p className="mt-3 text-xs text-ink-muted">{metric.month.note}</p>
-        ) : null}
-
-        {/* Provenance on demand rather than always open: it answers a question
-            the reader has not asked yet, and nine cards of it at once is a wall. */}
         {open ? (
-          <div
-            className="mt-3 space-y-2 rounded border p-3 text-xs"
-            style={{ borderColor: "var(--rule)", background: "var(--surface-sunken)" }}
-          >
+          <div className="metric-detail">
             {metric.month.calculation ? (
               <div>
-                <div className="text-ink-muted">How this month's figure was worked out</div>
-                <div className="data-value mt-0.5">{metric.month.calculation}</div>
+                <strong>Monthly calculation</strong>
+                <span className="data-value">{metric.month.calculation}</span>
               </div>
             ) : null}
             {metric.yearToDate.calculation ? (
               <div>
-                <div className="text-ink-muted">Year to date</div>
-                <div className="data-value mt-0.5">{metric.yearToDate.calculation}</div>
+                <strong>Year-to-date calculation</strong>
+                <span className="data-value">{metric.yearToDate.calculation}</span>
               </div>
             ) : null}
-            {metric.note ? <p className="text-ink-muted">{metric.note}</p> : null}
+            {metric.note ? <p className="m-0">{metric.note}</p> : null}
             <div>
-              <div className="text-ink-muted">Target source</div>
-              <div className="mt-0.5">{metric.sourceNote}</div>
+              <strong>Target source</strong>
+              <span>{metric.sourceNote}</span>
             </div>
           </div>
         ) : null}
       </div>
 
-      <div className="flex items-center justify-between gap-2 border-t border-rule px-4 py-2">
-        <StatusIndicator
-          status={statusFor[metric.month.status]}
-          label={statusLabel[metric.month.status]}
-        />
-        <div className="flex items-center gap-2">
-          {metric.proposed ? (
-            <span
-              className="rounded px-2 py-1 text-xs font-medium"
-              style={{ background: "var(--caution-wash)", color: "var(--caution)" }}
-              title="The target has not yet been agreed by its owner."
-            >
-              Target proposed
-            </span>
-          ) : null}
-          <span
-            className="rounded px-2 py-1 text-xs text-ink-muted"
-            style={{ background: "var(--neutral-wash)" }}
-          >
-            {metric.provenance}
-          </span>
-          <button
-            type="button"
-            className="text-xs text-ink-muted underline"
-            onClick={() => setOpen((current) => !current)}
-            aria-expanded={open}
-          >
-            {open ? "Hide" : "Where from"}
-          </button>
-        </div>
+      <div className="metric-card-foot">
+        <span className="metric-provenance" title={metric.provenance}>
+          {metric.provenance}
+        </span>
+        <button
+          type="button"
+          className="metric-detail-button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+        >
+          {open ? "Hide source" : "View source"}
+        </button>
       </div>
     </article>
   );

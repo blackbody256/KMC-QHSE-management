@@ -24,6 +24,8 @@ import info from "@material-symbols/svg-400/outlined/info.svg?raw";
 import error from "@material-symbols/svg-400/outlined/error.svg?raw";
 import checkCircle from "@material-symbols/svg-400/outlined/check_circle.svg?raw";
 import lock from "@material-symbols/svg-400/outlined/lock.svg?raw";
+import menu from "@material-symbols/svg-400/outlined/menu.svg?raw";
+import close from "@material-symbols/svg-400/outlined/close.svg?raw";
 
 /**
  * Icons are imported one at a time rather than through the Material Symbols
@@ -61,6 +63,8 @@ const registry = {
   error,
   check_circle: checkCircle,
   lock,
+  menu,
+  close,
 } as const;
 
 export type IconName = keyof typeof registry;
